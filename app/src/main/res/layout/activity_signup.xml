@@ -14,6 +14,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:padding="12dp"
+        android:contentDescription="@string/desc_back_arrow"
         android:src="@drawable/ic_arrow_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -24,6 +25,7 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginTop="8dp"
+        android:contentDescription="@string/desc_gavel_icon"
         android:src="@drawable/ic_gavel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -82,6 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="4dp"
+                android:autofillHints="name"
                 android:background="@drawable/edit_text_background"
                 android:hint="@string/display_name_hint"
                 android:inputType="textPersonName"
@@ -100,6 +103,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="4dp"
+                android:autofillHints="emailAddress"
                 android:background="@drawable/edit_text_background"
                 android:hint="@string/default_email"
                 android:inputType="textEmailAddress"
@@ -118,8 +122,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="4dp"
+                android:autofillHints="password"
                 android:background="@drawable/edit_text_background"
-                android:hint="........"
+                android:hint="@string/password_dot_hint"
                 android:inputType="textPassword"
                 android:paddingHorizontal="16dp" />
 
@@ -136,8 +141,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="4dp"
+                android:autofillHints="password"
                 android:background="@drawable/edit_text_background"
-                android:hint="........"
+                android:hint="@string/password_dot_hint"
                 android:inputType="textPassword"
                 android:paddingHorizontal="16dp" />
 

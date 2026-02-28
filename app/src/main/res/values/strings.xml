@@ -20,6 +20,7 @@
     <string name="default_email">john@example.com</string>
     <string name="password_hint">Password</string>
     <string name="default_password">password</string>
+    <string name="password_dot_hint">........</string>
     <string name="forgot_password">Forgot password?</string>
     <string name="dont_have_account">Don\'t have an account? </string>
     <string name="sign_up">Sign up</string>
