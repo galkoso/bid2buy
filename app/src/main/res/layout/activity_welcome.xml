@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_light_blue"
-    tools:context=".HomeActivity">
+    tools:context=".WelcomeActivity">
 
     <ImageView
         android:id="@+id/gavel_icon"
