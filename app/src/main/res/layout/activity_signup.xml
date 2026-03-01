@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_light_blue"
-    tools:context=".LoginActivity">
+    tools:context=".SignupActivity">
 
     <ImageView
-        android:id="@+id/back_arrow"
+        android:id="@+id/back_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
@@ -29,15 +29,15 @@
         android:src="@drawable/ic_gavel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/back_arrow"
+        app:layout_constraintTop_toBottomOf="@id/back_button"
         app:tint="#4D77FF" />
 
     <TextView
-        android:id="@+id/welcome_back_title"
+        android:id="@+id/signup_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/welcome_back"
+        android:text="@string/create_account"
         android:textColor="@color/black"
         android:textSize="28sp"
         android:textStyle="bold"
@@ -46,16 +46,16 @@
         app:layout_constraintTop_toBottomOf="@id/gavel_icon" />
 
     <TextView
-        android:id="@+id/login_subtitle"
+        android:id="@+id/signup_subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="@string/login_subtitle_text"
+        android:text="@string/join_bid2buy_subtitle"
         android:textColor="@color/text_secondary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/welcome_back_title" />
+        app:layout_constraintTop_toBottomOf="@id/signup_title" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -63,7 +63,7 @@
         android:layout_marginTop="8dp"
         android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/login_subtitle">
+        app:layout_constraintTop_toBottomOf="@id/signup_subtitle">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -75,6 +75,25 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/display_name_label"
+                android:textColor="@color/dark_button"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/display_name_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="4dp"
+                android:autofillHints="name"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/display_name_hint"
+                android:inputType="textPersonName"
+                android:paddingHorizontal="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:text="@string/email_label"
                 android:textColor="@color/dark_button"
                 android:textStyle="bold" />
@@ -110,21 +129,31 @@
                 android:paddingHorizontal="16dp" />
 
             <TextView
-                android:id="@+id/forgot_password_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="8dp"
-                android:text="@string/forgot_password"
-                android:textColor="@color/dark_button" />
+                android:layout_marginTop="12dp"
+                android:text="@string/confirm_password_label"
+                android:textColor="@color/dark_button"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/confirm_password_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="4dp"
+                android:autofillHints="password"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/password_dot_hint"
+                android:inputType="textPassword"
+                android:paddingHorizontal="16dp" />
 
             <Button
-                android:id="@+id/login_button"
+                android:id="@+id/signup_button"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="20dp"
                 android:backgroundTint="@color/dark_button"
-                android:text="@string/login"
+                android:text="@string/create_account"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 app:cornerRadius="8dp" />
@@ -139,15 +168,15 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/dont_have_account"
+                    android:text="@string/already_have_account"
                     android:textColor="@color/text_secondary" />
 
                 <TextView
-                    android:id="@+id/signup_link"
+                    android:id="@+id/login_link"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="@string/sign_up"
+                    android:layout_height="wrap_content"
+                    android:text="@string/login_link"
                     android:textColor="#4D77FF"
                     android:textStyle="bold" />
             </LinearLayout>

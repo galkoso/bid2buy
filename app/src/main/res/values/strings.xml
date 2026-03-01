@@ -3,4 +3,36 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="subtitle">Your Second-Hand Marketplace with Live Bidding</string>
+    <string name="create_account">Create Account</string>
+    <string name="login">Login</string>
+    <string name="browse_as_guest">Browse as Guest</string>
+    <string name="live_bidding">Live Bidding</string>
+    <string name="live_bidding_description">Real-time bidding system with instant updates</string>
+    <string name="secure_and_transparent">Secure &amp; Transparent</string>
+    <string name="secure_and_transparent_description">Track all bids and see complete auction history</string>
+    <string name="automatic_closing">Automatic Closing</string>
+    <string name="automatic_closing_description">Auctions close automatically with winner notifications</string>
+
+    <string name="welcome_back">Welcome Back</string>
+    <string name="login_subtitle_text">Login to your Bid2Buy account</string>
+    <string name="email_hint">Email</string>
+    <string name="default_email">john@example.com</string>
+    <string name="password_hint">Password</string>
+    <string name="default_password">password</string>
+    <string name="password_dot_hint">........</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="dont_have_account">Don\'t have an account? </string>
+    <string name="sign_up">Sign up</string>
+    <string name="desc_back_arrow">Back</string>
+    <string name="desc_gavel_icon">Gavel Icon</string>
+
+    <string name="join_bid2buy_subtitle">Join Bid2Buy marketplace today</string>
+    <string name="display_name_label">Display Name</string>
+    <string name="display_name_hint">John Doe</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="confirm_password_label">Confirm Password</string>
+    <string name="already_have_account">Already have an account? </string>
+    <string name="login_link">Login</string>
 </resources>
