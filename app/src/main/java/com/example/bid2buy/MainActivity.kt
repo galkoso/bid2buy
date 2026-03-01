@@ -2,10 +2,8 @@ package com.example.bid2buy
 
 import android.content.Intent
 import android.os.Bundle
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.bid2buy.databinding.ActivityMainBinding
 
@@ -20,12 +18,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val navView: BottomNavigationView = binding.navView
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
+        val navController = navHostFragment.navController
 
-        val navController = findNavController(R.id.nav_host_fragment_activity_main)
-        
-        // Removed setupActionBarWithNavController to prevent crash with NoActionBar themes
-        navView.setupWithNavController(navController)
+        binding.navView.setupWithNavController(navController)
+
+        binding.fabAdd.setOnClickListener {
+            navController.navigate(R.id.navigation_add)
+        }
 
         binding.logoutButton.setOnClickListener {
             authRepository.logout()
@@ -34,6 +35,22 @@ class MainActivity : AppCompatActivity() {
             }
             startActivity(intent)
             finish()
+        }
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.navigation_home, R.id.navigation_listings, 
+                R.id.navigation_notifications, R.id.navigation_profile -> {
+                    binding.bottomAppBar.performShow()
+                    binding.fabAdd.show()
+                    binding.logoutButton.visibility = android.view.View.VISIBLE
+                }
+                else -> {
+                    binding.bottomAppBar.performHide()
+                    binding.fabAdd.hide()
+                    binding.logoutButton.visibility = android.view.View.GONE
+                }
+            }
         }
     }
 }
