@@ -12,9 +12,9 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_listings"
         android:name="com.example.bid2buy.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
+        android:label="@string/title_listings"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
@@ -22,4 +22,16 @@
         android:name="com.example.bid2buy.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.example.bid2buy.ui.profile.ProfileFragment"
+        android:label="@string/title_profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/navigation_add"
+        android:name="com.example.bid2buy.ui.add.CreateListingFragment"
+        android:label="@string/title_add"
+        tools:layout="@layout/fragment_create_listing" />
 </navigation>
