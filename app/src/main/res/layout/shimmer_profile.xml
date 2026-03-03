@@ -1,134 +1,180 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingBottom="16dp">
+    android:layout_height="match_parent"
+    android:fillViewport="true">
 
-    <!-- Header placeholder -->
-    <View
-        android:layout_width="150dp"
-        android:layout_height="32dp"
-        android:layout_marginVertical="16dp"
-        android:background="@drawable/shimmer_placeholder_rounded" />
-
-    <!-- User Info Card placeholder -->
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp"
-        app:strokeColor="#E0E0E0"
-        app:strokeWidth="1dp">
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <View
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:background="@drawable/shimmer_placeholder_circle" />
+                android:orientation="vertical"
+                android:padding="24dp">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:orientation="vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <View
-                        android:layout_width="150dp"
-                        android:layout_height="24dp"
-                        android:background="@drawable/shimmer_placeholder_rounded" />
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:background="@drawable/shimmer_placeholder_circle" />
 
-                    <View
-                        android:layout_width="100dp"
-                        android:layout_height="16dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/shimmer_placeholder_rounded" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <View
+                            android:layout_width="150dp"
+                            android:layout_height="28dp"
+                            android:background="@drawable/shimmer_placeholder_rounded" />
+
+                        <View
+                            android:layout_width="100dp"
+                            android:layout_height="18dp"
+                            android:layout_marginTop="6dp"
+                            android:background="@drawable/shimmer_placeholder_rounded" />
+                    </LinearLayout>
                 </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/shimmer_placeholder_rounded" />
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/shimmer_placeholder_rounded" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Stats placeholder -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="horizontal">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/shimmer_placeholder_rounded" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/shimmer_placeholder_rounded" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="80dp"
-            android:layout_weight="1"
-            android:background="@drawable/shimmer_placeholder_rounded" />
-    </LinearLayout>
-
-    <!-- Quick Actions placeholder -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp"
-        app:strokeColor="#E0E0E0"
-        app:strokeWidth="1dp">
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
 
             <View
-                android:layout_width="120dp"
-                android:layout_height="24dp"
-                android:layout_marginBottom="16dp"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
                 android:background="@drawable/shimmer_placeholder_rounded" />
 
             <View
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="8dp"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
                 android:background="@drawable/shimmer_placeholder_rounded" />
 
             <View
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_width="0dp"
+                android:layout_height="80dp"
+                android:layout_weight="1"
                 android:background="@drawable/shimmer_placeholder_rounded" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
 
-</LinearLayout>
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/quick_actions"
+                    android:textColor="#E0E0E0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:ignore="TextContrastCheck" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginBottom="4dp"
+                    android:background="@drawable/shimmer_placeholder_rounded" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:background="@drawable/shimmer_placeholder_rounded" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="80dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:text="@string/account_activity"
+                    android:textColor="#E0E0E0"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:ignore="TextContrastCheck" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/shimmer_placeholder_rounded" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/shimmer_placeholder_rounded" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:background="@drawable/shimmer_placeholder_rounded" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
