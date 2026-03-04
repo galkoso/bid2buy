@@ -36,9 +36,16 @@ class SignupActivity : AppCompatActivity() {
     }
 
     private fun performSignup() {
+        val displayName = binding.displayNameEditText.text.toString().trim()
         val email = binding.emailEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
         val confirmPassword = binding.confirmPasswordEditText.text.toString().trim()
+
+        if (displayName.isEmpty()) {
+            binding.displayNameEditText.error = "Display name is required"
+            showErrorToast("Please enter a display name")
+            return
+        }
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             binding.emailEditText.error = "Invalid email"
@@ -59,7 +66,7 @@ class SignupActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            val result = authRepository.signUp(email, password)
+            val result = authRepository.signUp(email, password, displayName)
             if (result.isSuccess) {
                 navigateToMain()
             } else {

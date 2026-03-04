@@ -42,4 +42,33 @@
     <string name="logout">Logout</string>
     <string name="create_listing_fragment">Create Listing Fragment</string>
     <string name="home_sample_text">galll dannnnn</string>
+
+    <!-- Profile Fragment Strings -->
+    <string name="profile_label">Profile</string>
+    <string name="loading">Loading...</string>
+    <string name="placeholder_dashes">---</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="zero">0</string>
+    <string name="active_listings">Active Listings</string>
+    <string name="active_bids">Active Bids</string>
+    <string name="wins">Wins</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="my_listings">My Listings</string>
+    <string name="my_bids_and_wins">My Bids &amp; Wins</string>
+    <string name="account_activity">Account Activity</string>
+    <string name="member_since">Member since</string>
+    <string name="total_items_sold">Total items sold</string>
+    <string name="zero_percent">0%</string>
+    <string name="success_rate">Success rate</string>
+    <string name="response_time">Response time</string>
+    <string name="less_than_2_hours">&lt; 2 hours</string>
+    <string name="settings">Settings</string>
+
+    <!-- Content Descriptions -->
+    <string name="desc_email_icon">Email Icon</string>
+    <string name="desc_my_listings_icon">My Listings Icon</string>
+    <string name="desc_arrow_right">Arrow Right</string>
+    <string name="desc_my_bids_icon">My Bids Icon</string>
+    <string name="desc_settings_icon">Settings Icon</string>
+    <string name="desc_logout_icon">Logout Icon</string>
 </resources>
