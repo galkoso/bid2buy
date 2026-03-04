@@ -60,9 +60,36 @@
     <string name="total_items_sold">Total items sold</string>
     <string name="zero_percent">0%</string>
     <string name="success_rate">Success rate</string>
+    <string name="simple_text_placeholder">Placeholder</string>
     <string name="response_time">Response time</string>
     <string name="less_than_2_hours">&lt; 2 hours</string>
     <string name="settings">Settings</string>
+
+    <!-- Create Listing Strings -->
+    <string name="create_listing_title">Create Listing</string>
+    <string name="photos_title">Photos *</string>
+    <string name="photo_count_initial">0 / 10 photos</string>
+    <string name="add_photo">Add</string>
+    <string name="item_details_title">Item Details</string>
+    <string name="title_label">Title *</string>
+    <string name="title_hint">e.g., Sony WH-1000XM4 Headphones</string>
+    <string name="description_label">Description *</string>
+    <string name="description_hint">Provide detailed information...</string>
+    <string name="category_label">Category *</string>
+    <string name="select_category">Select category</string>
+    <string name="condition_label">Condition *</string>
+    <string name="select_condition">Select condition</string>
+    <string name="location_label">Location *</string>
+    <string name="location_hint">City or area</string>
+    <string name="pricing_timeline_title">Pricing &amp; Timeline</string>
+    <string name="starting_price_label">Starting Price (₪) *</string>
+    <string name="starting_price_hint">100</string>
+    <string name="closing_date_label">Closing Date *</string>
+    <string name="date_hint">dd/mm/yyyy</string>
+    <string name="closing_time_label">Closing Time *</string>
+    <string name="time_hint">--:--</string>
+    <string name="publish_listing">Publish Listing</string>
+    <string name="cancel">Cancel</string>
 
     <!-- Content Descriptions -->
     <string name="desc_email_icon">Email Icon</string>
@@ -71,4 +98,9 @@
     <string name="desc_my_bids_icon">My Bids Icon</string>
     <string name="desc_settings_icon">Settings Icon</string>
     <string name="desc_logout_icon">Logout Icon</string>
+    <string name="desc_calendar_icon">Calendar Icon</string>
+    <string name="desc_clock_icon">Clock Icon</string>
+    <string name="desc_upload_icon">Upload Icon</string>
+    <string name="desc_price_up">Increase Price</string>
+    <string name="desc_price_down">Decrease Price</string>
 </resources>
