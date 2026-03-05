@@ -7,6 +7,7 @@
     android:background="#F8F9FA">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
@@ -15,22 +16,23 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
             android:background="@drawable/header_border"
             app:contentInsetStartWithNavigation="0dp"
             app:navigationContentDescription="@string/desc_back_arrow"
-            app:navigationIcon="@drawable/ic_arrow_back">
+            app:navigationIcon="@drawable/ic_arrow_back_bold">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingVertical="16dp"
+                android:layout_gravity="center_vertical"
                 android:text="@string/create_listing_title"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
         </androidx.appcompat.widget.Toolbar>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -44,7 +46,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Photos Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -109,7 +110,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Item Details Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -134,7 +134,6 @@
                         android:textColor="@color/black"
                         android:textSize="18sp" />
 
-                    <!-- Title -->
                     <TextView
                         android:id="@+id/tv_title_label"
                         android:layout_width="wrap_content"
@@ -161,7 +160,6 @@
                         tools:ignore="LabelFor"
                         tools:targetApi="o" />
 
-                    <!-- Description -->
                     <TextView
                         android:id="@+id/tv_description_label"
                         android:layout_width="wrap_content"
@@ -190,7 +188,6 @@
                         tools:ignore="LabelFor"
                         tools:targetApi="o" />
 
-                    <!-- Category -->
                     <TextView
                         android:id="@+id/tv_category_label"
                         android:layout_width="wrap_content"
@@ -231,7 +228,6 @@
                             tools:ignore="LabelFor" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Condition -->
                     <TextView
                         android:id="@+id/tv_condition_label"
                         android:layout_width="wrap_content"
@@ -272,7 +268,6 @@
                             tools:ignore="LabelFor" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Location -->
                     <TextView
                         android:id="@+id/tv_location_label"
                         android:layout_width="wrap_content"
@@ -302,7 +297,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Pricing & Timeline Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -327,7 +321,6 @@
                         android:textColor="@color/black"
                         android:textSize="18sp" />
 
-                    <!-- Starting Price -->
                     <TextView
                         android:id="@+id/tv_price_label"
                         android:layout_width="wrap_content"
@@ -389,7 +382,6 @@
                         </LinearLayout>
                     </FrameLayout>
 
-                    <!-- Closing Date -->
                     <TextView
                         android:id="@+id/tv_date_label"
                         android:layout_width="wrap_content"
@@ -429,7 +421,6 @@
                             app:tint="#444444" />
                     </FrameLayout>
 
-                    <!-- Closing Time -->
                     <TextView
                         android:id="@+id/tv_time_label"
                         android:layout_width="wrap_content"
@@ -472,7 +463,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Action Buttons -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_publish"
                 android:layout_width="match_parent"
