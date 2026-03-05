@@ -12,4 +12,5 @@
     <color name="dark_button">#0D1B34</color>
     <color name="text_secondary">#8A91A0</color>
     <color name="error_red">#E53935</color>
+    <color name="light_gray_bg">#F1F3F4</color>
 </resources>
