@@ -71,31 +71,51 @@
                         android:textSize="18sp" />
 
                     <LinearLayout
-                        android:id="@+id/photo_upload_container"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
-                        android:background="@drawable/dashed_border"
-                        android:clickable="true"
-                        android:contentDescription="@string/add_photo"
-                        android:focusable="true"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_upload"
-                            app:tint="#5F6368" />
+                        <LinearLayout
+                            android:id="@+id/photo_upload_container"
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:background="@drawable/dashed_border"
+                            android:clickable="true"
+                            android:contentDescription="@string/add_photo"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_upload"
+                                app:tint="#5F6368" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/add_photo"
+                                android:textColor="#5F6368"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <HorizontalScrollView
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/add_photo"
-                            android:textColor="#5F6368"
-                            android:textSize="12sp" />
+                            android:layout_marginStart="8dp"
+                            android:scrollbars="none">
+
+                            <LinearLayout
+                                android:id="@+id/photo_previews_container"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal" />
+                        </HorizontalScrollView>
                     </LinearLayout>
 
                     <TextView
@@ -359,25 +379,28 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="end|center_vertical"
                             android:layout_marginEnd="12dp"
-                            android:orientation="vertical">
+                            android:orientation="vertical"
+                            android:gravity="center">
 
                             <ImageView
                                 android:id="@+id/iv_price_up"
-                                android:layout_width="26dp"
-                                android:layout_height="20dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:clickable="true"
                                 android:contentDescription="@string/desc_price_up"
                                 android:focusable="true"
+                                android:scaleType="centerInside"
                                 android:src="@drawable/ic_arrow_drop_up" />
 
                             <ImageView
                                 android:id="@+id/iv_price_down"
-                                android:layout_width="26dp"
-                                android:layout_height="20dp"
-                                android:layout_marginTop="-8dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginTop="-12dp"
                                 android:clickable="true"
                                 android:contentDescription="@string/desc_price_down"
                                 android:focusable="true"
+                                android:scaleType="centerInside"
                                 android:src="@drawable/ic_arrow_drop_down" />
                         </LinearLayout>
                     </FrameLayout>

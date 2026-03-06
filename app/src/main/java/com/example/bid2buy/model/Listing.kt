@@ -1,0 +1,20 @@
+package com.example.bid2buy.model
+
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ServerTimestamp
+
+data class Listing(
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val category: String = "",
+    val condition: String = "",
+    val location: String = "",
+    val startingPrice: Double = 0.0,
+    val closingAt: Timestamp? = null,
+    @ServerTimestamp
+    val createdAt: Timestamp? = null,
+    val createdByUid: String = "",
+    val photoUrls: List<String> = emptyList(),
+    val status: String = "ACTIVE"
+)

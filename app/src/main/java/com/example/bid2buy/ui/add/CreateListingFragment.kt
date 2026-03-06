@@ -3,6 +3,7 @@ package com.example.bid2buy.ui.add
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,19 +12,67 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.CheckedTextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentCreateListingBinding
+import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 class CreateListingFragment : Fragment() {
     private var _binding: FragmentCreateListingBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: CreateListingViewModel by viewModels()
+
+    private val selectedImageUris = mutableListOf<Uri>()
     
     private var selectedDateTime: Calendar = Calendar.getInstance().apply {
         add(Calendar.HOUR_OF_DAY, 1)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
+    private val getImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            if (selectedImageUris.size < 10) {
+                selectedImageUris.add(it)
+                addPhotoToPreview(it)
+                updatePhotoCount()
+            } else {
+                Toast.makeText(requireContext(), "Maximum 10 photos allowed", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun addPhotoToPreview(uri: Uri) {
+        val previewBinding = ItemPhotoPreviewBinding.inflate(
+            LayoutInflater.from(requireContext()),
+            binding.photoPreviewsContainer,
+            false
+        )
+        previewBinding.ivPhoto.setImageURI(uri)
+        
+        previewBinding.ivPhoto.setOnLongClickListener {
+            selectedImageUris.remove(uri)
+            binding.photoPreviewsContainer.removeView(previewBinding.root)
+            updatePhotoCount()
+            true
+        }
+        
+        binding.photoPreviewsContainer.addView(previewBinding.root)
+    }
+
+    private fun updatePhotoCount() {
+        binding.tvPhotoCount.text = "${selectedImageUris.size} / 10 photos selected"
     }
 
     override fun onCreateView(
@@ -42,6 +91,37 @@ class CreateListingFragment : Fragment() {
         setupInputs()
         setupDropdowns()
         setupPriceControls()
+        observeViewModel()
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    when (state) {
+                        is CreateListingState.Loading -> {
+                            binding.btnPublish.isEnabled = false
+                            binding.btnPublish.text = "Publishing..."
+                        }
+                        is CreateListingState.Success -> {
+                            binding.btnPublish.isEnabled = true
+                            binding.btnPublish.text = getString(R.string.publish_listing)
+                            Toast.makeText(requireContext(), "Listing published successfully!", Toast.LENGTH_LONG).show()
+                            findNavController().navigateUp()
+                        }
+                        is CreateListingState.Error -> {
+                            binding.btnPublish.isEnabled = true
+                            binding.btnPublish.text = getString(R.string.publish_listing)
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                        }
+                        is CreateListingState.Idle -> {
+                            binding.btnPublish.isEnabled = true
+                            binding.btnPublish.text = getString(R.string.publish_listing)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun setupNavigation() {
@@ -55,15 +135,41 @@ class CreateListingFragment : Fragment() {
 
         binding.btnPublish.setOnClickListener {
             if (validateInputs()) {
-                Toast.makeText(requireContext(), "Listing created (Simulation)", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
+                val title = binding.etTitle.text.toString().trim()
+                val description = binding.etDescription.text.toString().trim()
+                val category = binding.autoCategory.text.toString()
+                val condition = binding.autoCondition.text.toString()
+                val location = binding.etLocation.text.toString().trim()
+                val price = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
+
+                viewModel.publishListing(
+                    title = title,
+                    description = description,
+                    category = category,
+                    condition = condition,
+                    location = location,
+                    startingPrice = price,
+                    closingDate = selectedDateTime.time,
+                    imageUris = selectedImageUris
+                )
             }
         }
     }
 
     private fun validateInputs(): Boolean {
-        if (selectedDateTime.before(Calendar.getInstance())) {
-            Toast.makeText(requireContext(), "Please select a future date and time", Toast.LENGTH_SHORT).show()
+        if (binding.etTitle.text.toString().isEmpty()) {
+            Toast.makeText(requireContext(), "Title is required", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        
+        if (selectedImageUris.isEmpty()) {
+            Toast.makeText(requireContext(), "Please select at least one photo", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        val now = Calendar.getInstance()
+        if (selectedDateTime.before(now)) {
+            Toast.makeText(requireContext(), "Closing time must be in the future", Toast.LENGTH_SHORT).show()
             return false
         }
         
@@ -97,7 +203,11 @@ class CreateListingFragment : Fragment() {
 
     private fun setupInputs() {
         binding.photoUploadContainer.setOnClickListener {
-            Toast.makeText(requireContext(), "Photo picker would open here", Toast.LENGTH_SHORT).show()
+            if (selectedImageUris.size < 10) {
+                getImage.launch("image/*")
+            } else {
+                Toast.makeText(requireContext(), "Maximum 10 photos reached", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.dateContainer.setOnClickListener {
@@ -105,18 +215,26 @@ class CreateListingFragment : Fragment() {
             val datePickerDialog = DatePickerDialog(
                 requireContext(),
                 { _, year, month, dayOfMonth ->
-                    selectedDateTime.set(Calendar.YEAR, year)
-                    selectedDateTime.set(Calendar.MONTH, month)
-                    selectedDateTime.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                    
-                    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    binding.tvSelectedDate.text = sdf.format(selectedDateTime.time)
-                    binding.tvSelectedDate.setTextColor(resources.getColor(android.R.color.black, null))
-                    
-                    if (selectedDateTime.before(Calendar.getInstance())) {
-                         selectedDateTime = Calendar.getInstance().apply { add(Calendar.HOUR_OF_DAY, 1) }
-                         updateTimeDisplay()
+                    val tempCalendar = selectedDateTime.clone() as Calendar
+                    tempCalendar.set(Calendar.YEAR, year)
+                    tempCalendar.set(Calendar.MONTH, month)
+                    tempCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+                    if (tempCalendar.before(currentCalendar)) {
+                        Toast.makeText(requireContext(), "Closing time must be in the future", Toast.LENGTH_SHORT).show()
+                        selectedDateTime = Calendar.getInstance().apply { 
+                            add(Calendar.HOUR_OF_DAY, 1)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                    } else {
+                        selectedDateTime.set(Calendar.YEAR, year)
+                        selectedDateTime.set(Calendar.MONTH, month)
+                        selectedDateTime.set(Calendar.DAY_OF_MONTH, dayOfMonth)
                     }
+                    
+                    updateDateDisplay()
+                    updateTimeDisplay()
                 },
                 selectedDateTime.get(Calendar.YEAR),
                 selectedDateTime.get(Calendar.MONTH),
@@ -135,7 +253,7 @@ class CreateListingFragment : Fragment() {
                     tempCalendar.set(Calendar.MINUTE, minute)
                     
                     if (tempCalendar.before(Calendar.getInstance())) {
-                        Toast.makeText(requireContext(), "Please select a future time", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Closing time must be in the future", Toast.LENGTH_SHORT).show()
                     } else {
                         selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay)
                         selectedDateTime.set(Calendar.MINUTE, minute)
@@ -162,6 +280,12 @@ class CreateListingFragment : Fragment() {
                 binding.etPrice.setText((currentPrice - 1).toString())
             }
         }
+    }
+
+    private fun updateDateDisplay() {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        binding.tvSelectedDate.text = sdf.format(selectedDateTime.time)
+        binding.tvSelectedDate.setTextColor(resources.getColor(android.R.color.black, null))
     }
 
     private fun updateTimeDisplay() {
@@ -192,7 +316,6 @@ class CreateListingFragment : Fragment() {
                 view.isChecked = isSelected
                 view.isActivated = isSelected
                 view.isSelected = isSelected
-                // Ensure the view is redrawn with the correct states
                 view.refreshDrawableState()
             }
             return view
