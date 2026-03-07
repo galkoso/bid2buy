@@ -103,4 +103,9 @@
     <string name="desc_upload_icon">Upload Icon</string>
     <string name="desc_price_up">Increase Price</string>
     <string name="desc_price_down">Decrease Price</string>
+
+    <!-- Home Fragment Strings -->
+    <string name="browse_auctions">Browse Auctions</string>
+    <string name="desc_filter_icon">Filter</string>
+    <string name="desc_search_icon">Search</string>
 </resources>
