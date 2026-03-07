@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Bid2Buy</string>
     <string name="title_home">Browse</string>
-    <string name="title_listings">Listings</string>
+    <string name="title_listings">My Listings</string>
     <string name="title_notifications">Bids</string>
     <string name="title_profile">Profile</string>
     <string name="title_add">Add Listing</string>
