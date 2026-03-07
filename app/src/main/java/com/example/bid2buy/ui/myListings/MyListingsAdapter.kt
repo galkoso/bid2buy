@@ -1,6 +1,7 @@
 package com.example.bid2buy.ui.myListings
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -27,8 +28,12 @@ class MyListingsAdapter : ListAdapter<Listing, MyListingsAdapter.ViewHolder>(Dif
         fun bind(listing: Listing) {
             binding.tvTitle.text = listing.title
             binding.tvLocation.text = listing.location
+            binding.tvCondition.text = listing.condition.lowercase()
             binding.tvPrice.text = "₪${listing.startingPrice.toInt()}"
+            
+            // Const values as requested
             binding.tvBidsCount.text = "2 bids"
+            binding.ivGraph.visibility = View.VISIBLE
 
             val now = Timestamp.now()
             val closingAt = listing.closingAt
