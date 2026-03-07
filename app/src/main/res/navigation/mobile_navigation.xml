@@ -13,9 +13,9 @@
 
     <fragment
         android:id="@+id/navigation_listings"
-        android:name="com.example.bid2buy.ui.dashboard.DashboardFragment"
+        android:name="com.example.bid2buy.ui.myListings.MyListingsFragment"
         android:label="@string/title_listings"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_my_listings" />
 
     <fragment
         android:id="@+id/navigation_notifications"

@@ -10,9 +10,14 @@
         <item name="colorSecondaryVariant">#1976D2</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
 
         <!-- Bottom Navigation Styles -->
         <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView.Colored</item>
+    </style>
+
+    <style name="RoundedImageView">
+        <item name="cornerSize">16dp</item>
     </style>
 </resources>
