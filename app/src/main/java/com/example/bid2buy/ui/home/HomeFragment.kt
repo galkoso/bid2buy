@@ -37,6 +37,7 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
         setupSwipeRefresh()
         setupFilterButton()
+        setupSearchButton()
         observeViewModel()
 
         homeViewModel.startListening()
@@ -59,6 +60,17 @@ class HomeFragment : Fragment() {
     private fun setupFilterButton() {
         binding.ivFilter.setOnClickListener {
             showFilterDialog()
+        }
+    }
+
+    private fun setupSearchButton() {
+        binding.ivSearch.setOnClickListener {
+            if (binding.llSearchContainer.visibility == View.VISIBLE) {
+                binding.llSearchContainer.visibility = View.GONE
+            } else {
+                binding.llSearchContainer.visibility = View.VISIBLE
+                binding.etSearch.requestFocus()
+            }
         }
     }
 
