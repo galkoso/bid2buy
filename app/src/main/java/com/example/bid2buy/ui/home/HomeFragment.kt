@@ -1,14 +1,21 @@
 package com.example.bid2buy.ui.home
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.CheckedTextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.bid2buy.R
+import com.example.bid2buy.databinding.DialogFilterBinding
 import com.example.bid2buy.databinding.FragmentHomeBinding
 import com.example.bid2buy.ui.myListings.MyListingsAdapter
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class HomeFragment : Fragment() {
 
@@ -29,6 +36,7 @@ class HomeFragment : Fragment() {
 
         setupRecyclerView()
         setupSwipeRefresh()
+        setupFilterButton()
         observeViewModel()
 
         homeViewModel.startListening()
@@ -46,6 +54,78 @@ class HomeFragment : Fragment() {
         binding.swipeRefresh.setOnRefreshListener {
             homeViewModel.refresh()
         }
+    }
+
+    private fun setupFilterButton() {
+        binding.ivFilter.setOnClickListener {
+            showFilterDialog()
+        }
+    }
+
+    private fun showFilterDialog() {
+        val dialog = BottomSheetDialog(requireContext())
+        val dialogBinding = DialogFilterBinding.inflate(layoutInflater)
+        dialog.setContentView(dialogBinding.root)
+
+        val (savedCategory, savedCondition, savedPrice) = homeViewModel.getCurrentFilters()
+
+        setupDialogDropdowns(dialogBinding, savedCategory, savedCondition, savedPrice)
+
+        dialogBinding.ivClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnApply.setOnClickListener {
+            val category = dialogBinding.autoCategoryFilter.text.toString()
+            val condition = dialogBinding.autoConditionFilter.text.toString()
+            val priceRange = dialogBinding.autoPriceFilter.text.toString()
+            
+            homeViewModel.setFilters(category, condition, priceRange)
+            dialog.dismiss()
+        }
+
+        dialogBinding.btnClear.setOnClickListener {
+            homeViewModel.clearFilters()
+            
+            dialogBinding.autoCategoryFilter.setText(getString(R.string.all_categories), false)
+            dialogBinding.autoConditionFilter.setText(getString(R.string.all_conditions), false)
+            dialogBinding.autoPriceFilter.setText(getString(R.string.all_prices), false)
+            
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun setupDialogDropdowns(
+        dialogBinding: DialogFilterBinding,
+        savedCategory: String?,
+        savedCondition: String?,
+        savedPrice: String?
+    ) {
+        val categories = arrayOf(
+            getString(R.string.all_categories), "Electronics", "Fashion", "Home & Garden", "Sports", "Accessories", "Other"
+        )
+        setupDropdown(dialogBinding.autoCategoryFilter, categories, savedCategory ?: getString(R.string.all_categories))
+
+        val conditions = arrayOf(
+            getString(R.string.all_conditions), "New", "Like New", "Used", "Refurbished"
+        )
+        setupDropdown(dialogBinding.autoConditionFilter, conditions, savedCondition ?: getString(R.string.all_conditions))
+
+        val priceRanges = arrayOf(
+            getString(R.string.all_prices),
+            getString(R.string.under_100),
+            getString(R.string.price_100_500),
+            getString(R.string.over_500)
+        )
+        setupDropdown(dialogBinding.autoPriceFilter, priceRanges, savedPrice ?: getString(R.string.all_prices))
+    }
+
+    private fun setupDropdown(view: AutoCompleteTextView, options: Array<String>, selectedValue: String) {
+        val adapter = SelectionAwareAdapter(requireContext(), R.layout.dropdown_item, options, view)
+        view.setAdapter(adapter)
+        view.setText(selectedValue, false)
     }
 
     private fun observeViewModel() {
@@ -67,5 +147,28 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private class SelectionAwareAdapter(
+        context: Context,
+        resource: Int,
+        objects: Array<String>,
+        private val autoCompleteTextView: AutoCompleteTextView
+    ) : ArrayAdapter<String>(context, resource, objects) {
+        
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = super.getView(position, convertView, parent)
+            val itemText = getItem(position)
+            val currentText = autoCompleteTextView.text.toString()
+            val isSelected = itemText != null && itemText == currentText
+
+            if (view is CheckedTextView) {
+                view.isChecked = isSelected
+                view.isActivated = isSelected
+                view.isSelected = isSelected
+                view.refreshDrawableState()
+            }
+            return view
+        }
     }
 }

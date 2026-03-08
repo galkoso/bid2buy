@@ -108,4 +108,19 @@
     <string name="browse_auctions">Browse Auctions</string>
     <string name="desc_filter_icon">Filter</string>
     <string name="desc_search_icon">Search</string>
+
+    <!-- Filter Dialog Strings -->
+    <string name="filters_title">Filters</string>
+    <string name="category_filter_label">Category</string>
+    <string name="all_categories">All Categories</string>
+    <string name="condition_filter_label">Condition</string>
+    <string name="all_conditions">All Conditions</string>
+    <string name="price_range_label">Price Range</string>
+    <string name="all_prices">All Prices</string>
+    <string name="under_100">Under ₪100</string>
+    <string name="price_100_500">₪100 - ₪500</string>
+    <string name="over_500">Over ₪500</string>
+    <string name="clear_all">Clear All</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="desc_close_filters">Close Filters</string>
 </resources>
