@@ -30,6 +30,7 @@ class HomeViewModel : ViewModel() {
     private var currentCategory: String? = null
     private var currentCondition: String? = null
     private var currentPriceRange: String? = null
+    private var currentSearchQuery: String? = null
 
     fun startListening() {
         _isLoading.value = true
@@ -82,6 +83,11 @@ class HomeViewModel : ViewModel() {
         processAndPostListings()
     }
 
+    fun setSearchQuery(query: String?) {
+        currentSearchQuery = if (query.isNullOrBlank()) null else query
+        processAndPostListings()
+    }
+
     fun clearFilters() {
         currentCategory = null
         currentCondition = null
@@ -93,6 +99,13 @@ class HomeViewModel : ViewModel() {
         val now = Timestamp.now()
         var filteredList = lastFetchedListings.filter { 
             it.closingAt != null && it.closingAt.toDate().time > now.toDate().time 
+        }
+
+        currentSearchQuery?.let { query ->
+            filteredList = filteredList.filter { 
+                it.title?.contains(query, ignoreCase = true) == true ||
+                it.description?.contains(query, ignoreCase = true) == true
+            }
         }
 
         currentCategory?.let { cat ->
