@@ -67,33 +67,51 @@ class HomeFragment : Fragment() {
         val dialogBinding = DialogFilterBinding.inflate(layoutInflater)
         dialog.setContentView(dialogBinding.root)
 
-        setupDialogDropdowns(dialogBinding)
+        val (savedCategory, savedCondition, savedPrice) = homeViewModel.getCurrentFilters()
+
+        setupDialogDropdowns(dialogBinding, savedCategory, savedCondition, savedPrice)
 
         dialogBinding.ivClose.setOnClickListener {
             dialog.dismiss()
         }
 
         dialogBinding.btnApply.setOnClickListener {
+            val category = dialogBinding.autoCategoryFilter.text.toString()
+            val condition = dialogBinding.autoConditionFilter.text.toString()
+            val priceRange = dialogBinding.autoPriceFilter.text.toString()
+            
+            homeViewModel.setFilters(category, condition, priceRange)
             dialog.dismiss()
         }
 
         dialogBinding.btnClear.setOnClickListener {
-            // No functionality for now
+            homeViewModel.clearFilters()
+            
+            dialogBinding.autoCategoryFilter.setText(getString(R.string.all_categories), false)
+            dialogBinding.autoConditionFilter.setText(getString(R.string.all_conditions), false)
+            dialogBinding.autoPriceFilter.setText(getString(R.string.all_prices), false)
+            
+            dialog.dismiss()
         }
 
         dialog.show()
     }
 
-    private fun setupDialogDropdowns(dialogBinding: DialogFilterBinding) {
+    private fun setupDialogDropdowns(
+        dialogBinding: DialogFilterBinding,
+        savedCategory: String?,
+        savedCondition: String?,
+        savedPrice: String?
+    ) {
         val categories = arrayOf(
             getString(R.string.all_categories), "Electronics", "Fashion", "Home & Garden", "Sports", "Accessories", "Other"
         )
-        setupDropdown(dialogBinding.autoCategoryFilter, categories)
+        setupDropdown(dialogBinding.autoCategoryFilter, categories, savedCategory ?: getString(R.string.all_categories))
 
         val conditions = arrayOf(
             getString(R.string.all_conditions), "New", "Like New", "Used", "Refurbished"
         )
-        setupDropdown(dialogBinding.autoConditionFilter, conditions)
+        setupDropdown(dialogBinding.autoConditionFilter, conditions, savedCondition ?: getString(R.string.all_conditions))
 
         val priceRanges = arrayOf(
             getString(R.string.all_prices),
@@ -101,13 +119,13 @@ class HomeFragment : Fragment() {
             getString(R.string.price_100_500),
             getString(R.string.over_500)
         )
-        setupDropdown(dialogBinding.autoPriceFilter, priceRanges)
+        setupDropdown(dialogBinding.autoPriceFilter, priceRanges, savedPrice ?: getString(R.string.all_prices))
     }
 
-    private fun setupDropdown(view: AutoCompleteTextView, options: Array<String>) {
+    private fun setupDropdown(view: AutoCompleteTextView, options: Array<String>, selectedValue: String) {
         val adapter = SelectionAwareAdapter(requireContext(), R.layout.dropdown_item, options, view)
         view.setAdapter(adapter)
-        view.setText(options[0], false)
+        view.setText(selectedValue, false)
     }
 
     private fun observeViewModel() {

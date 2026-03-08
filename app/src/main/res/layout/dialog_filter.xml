@@ -16,7 +16,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/iv_close"
+            android:layout_marginEnd="8dp"
             android:text="@string/filters_title"
             android:textColor="@color/black"
             android:textSize="20sp"
@@ -33,9 +36,11 @@
     </RelativeLayout>
 
     <TextView
+        android:id="@+id/tv_category_filter_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
+        android:labelFor="@+id/auto_category_filter"
         android:text="@string/category_filter_label"
         android:textColor="@color/black"
         android:textSize="14sp" />
@@ -65,13 +70,16 @@
             android:minHeight="48dp"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            tools:ignore="LabelFor" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
+        android:id="@+id/tv_condition_filter_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
+        android:labelFor="@+id/auto_condition_filter"
         android:text="@string/condition_filter_label"
         android:textColor="@color/black"
         android:textSize="14sp" />
@@ -101,13 +109,16 @@
             android:minHeight="48dp"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            tools:ignore="LabelFor" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
+        android:id="@+id/tv_price_filter_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-medium"
+        android:labelFor="@+id/auto_price_filter"
         android:text="@string/price_range_label"
         android:textColor="@color/black"
         android:textSize="14sp" />
@@ -137,7 +148,8 @@
             android:minHeight="48dp"
             android:paddingTop="12dp"
             android:paddingBottom="12dp"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            tools:ignore="LabelFor" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout

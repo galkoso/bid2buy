@@ -27,6 +27,10 @@ class HomeViewModel : ViewModel() {
     private var lastFetchedListings: List<Listing> = emptyList()
     private var timerJob: Job? = null
 
+    private var currentCategory: String? = null
+    private var currentCondition: String? = null
+    private var currentPriceRange: String? = null
+
     fun startListening() {
         _isLoading.value = true
         repository.getFirestoreInstance()
@@ -48,7 +52,7 @@ class HomeViewModel : ViewModel() {
         if (timerJob != null) return
         timerJob = viewModelScope.launch {
             while (true) {
-                delay(60000) // Pulse every minute
+                delay(60000)
                 _timerPulse.postValue(System.currentTimeMillis())
                 processAndPostListings()
             }
@@ -71,13 +75,47 @@ class HomeViewModel : ViewModel() {
             }
     }
 
+    fun setFilters(category: String?, condition: String?, priceRange: String?) {
+        currentCategory = if (category == "All Categories") null else category
+        currentCondition = if (condition == "All Conditions") null else condition
+        currentPriceRange = if (priceRange == "All Prices") null else priceRange
+        processAndPostListings()
+    }
+
+    fun clearFilters() {
+        currentCategory = null
+        currentCondition = null
+        currentPriceRange = null
+        processAndPostListings()
+    }
+
     private fun processAndPostListings() {
         val now = Timestamp.now()
-        val activeListings = lastFetchedListings.filter { 
+        var filteredList = lastFetchedListings.filter { 
             it.closingAt != null && it.closingAt.toDate().time > now.toDate().time 
-        }.sortedBy { it.closingAt }
-        
-        _listings.postValue(activeListings)
+        }
+
+        currentCategory?.let { cat ->
+            filteredList = filteredList.filter { it.category == cat }
+        }
+
+        currentCondition?.let { cond ->
+            filteredList = filteredList.filter { it.condition == cond }
+        }
+
+        currentPriceRange?.let { range ->
+            filteredList = filteredList.filter { listing ->
+                when (range) {
+                    "Under ₪100" -> listing.startingPrice < 100
+                    "₪100 - ₪500" -> listing.startingPrice in 100.0..500.0
+                    "Over ₪500" -> listing.startingPrice > 500
+                    else -> true
+                }
+            }
+        }
+
+        val sortedList = filteredList.sortedBy { it.closingAt }
+        _listings.postValue(sortedList)
     }
 
     fun stopListening() {
@@ -88,5 +126,9 @@ class HomeViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         stopListening()
+    }
+
+    fun getCurrentFilters(): Triple<String?, String?, String?> {
+        return Triple(currentCategory, currentCondition, currentPriceRange)
     }
 }
