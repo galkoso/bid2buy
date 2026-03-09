@@ -126,7 +126,8 @@
                     android:text="Active"
                     android:textColor="@color/white"
                     android:textSize="11sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:gravity="center" />
             </RelativeLayout>
 
             <!-- Seller Name -->
@@ -159,6 +160,7 @@
                     android:padding="10dp">
 
                     <ImageView
+                        android:id="@+id/ivCategoryIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_tag"
@@ -186,6 +188,7 @@
                     android:padding="10dp">
 
                     <ImageView
+                        android:id="@+id/ivConditionIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_condition"
@@ -212,6 +215,7 @@
                     android:padding="10dp">
 
                     <ImageView
+                        android:id="@+id/ivLocationIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_location_small"
@@ -229,6 +233,7 @@
 
                 <!-- Timer Pill -->
                 <LinearLayout
+                    android:id="@+id/llTimerPill"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
@@ -238,6 +243,7 @@
                     android:padding="10dp">
 
                     <ImageView
+                        android:id="@+id/ivTimerIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
                         android:src="@drawable/ic_timer"

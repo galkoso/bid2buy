@@ -7,15 +7,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentListingDetailsBinding
 import com.example.bid2buy.model.Listing
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.firebase.Timestamp
-import java.util.concurrent.TimeUnit
 
 class ListingDetailsFragment : Fragment() {
 
@@ -92,12 +92,45 @@ class ListingDetailsFragment : Fragment() {
         viewModel.canBid.observe(viewLifecycleOwner) { canBid ->
             binding.btnPlaceBid.isEnabled = canBid
             binding.btnPlaceBid.alpha = if (canBid) 1.0f else 0.5f
+            updateBidButtonText()
+        }
+
+        viewModel.isClosed.observe(viewLifecycleOwner) { isClosed ->
+            updateStatusBadge(isClosed)
+            updateBidButtonText()
+        }
+
+        viewModel.timeRemaining.observe(viewLifecycleOwner) { timeText ->
+            binding.tvTimeRemaining.text = timeText
         }
 
         viewModel.error.observe(viewLifecycleOwner) { error ->
             error?.let {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    private fun updateStatusBadge(isClosed: Boolean) {
+        if (isClosed) {
+            binding.tvStatus.text = "Closed"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_status_closed)
+            binding.tvStatus.setTextColor(Color.WHITE)
+            binding.tvStatus.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
+        } else {
+            binding.tvStatus.text = "Active"
+            binding.tvStatus.setBackgroundResource(R.drawable.bg_status_active)
+            binding.tvStatus.setTextColor(Color.WHITE)
+            binding.tvStatus.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
+        }
+    }
+
+    private fun updateBidButtonText() {
+        val isClosed = viewModel.isClosed.value ?: false
+        if (isClosed) {
+            binding.btnPlaceBid.text = "Auction Closed"
+        } else {
+            binding.btnPlaceBid.text = "Place a Bid"
         }
     }
 
@@ -111,12 +144,6 @@ class ListingDetailsFragment : Fragment() {
         // Seller name
         binding.tvSellerName.text = "by ${listing.createdByName}"
         
-        // Status
-        binding.tvStatus.text = listing.status.lowercase().replaceFirstChar { it.uppercase() }
-        if (listing.status == "CLOSED") {
-            binding.tvStatus.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
-        }
-
         // Price and Bid Info
         val currentBid = listing.currentHighestBid
         if (currentBid != null) {
@@ -133,25 +160,11 @@ class ListingDetailsFragment : Fragment() {
         binding.tvStartingPrice.text = "Starting price: ₪${listing.startingPrice.toInt()}"
         binding.btnViewBids.text = "View ${listing.bidCount} bids"
 
-        // Timer calculation
-        listing.closingAt?.let { closingAt ->
-            val now = Timestamp.now()
-            val diff = closingAt.toDate().time - now.toDate().time
-            if (diff > 0) {
-                val hours = TimeUnit.MILLISECONDS.toHours(diff)
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60
-                binding.tvTimeRemaining.text = String.format("%02dh %02dm", hours, minutes)
-            } else {
-                binding.tvTimeRemaining.text = "Closed"
-            }
-        }
-
         // Image Gallery
         if (listing.photoUrls.isNotEmpty()) {
             val adapter = ImageGalleryAdapter(listing.photoUrls)
             binding.vpImageGallery.adapter = adapter
             
-            // Setup Indicator if multiple images
             if (listing.photoUrls.size > 1) {
                 binding.tabIndicator.visibility = View.VISIBLE
                 TabLayoutMediator(binding.tabIndicator, binding.vpImageGallery) { _, _ -> }.attach()

@@ -61,6 +61,19 @@ class ListingsRepository {
     }
 
     suspend fun deleteListing(listingId: String) {
+        val uid = auth.currentUser?.uid ?: return
+        
+        try {
+            val storageRef = storage.reference
+                .child("listing_photos")
+                .child(uid)
+                .child(listingId)
+            
+            val listResult = storageRef.listAll().await()
+            listResult.items.forEach { it.delete().await() }
+        } catch (e: Exception) {
+        }
+
         firestore.collection("listings").document(listingId).delete().await()
     }
 

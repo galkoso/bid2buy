@@ -7,8 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class ListingDetailsViewModel : ViewModel() {
 
@@ -38,6 +41,11 @@ class ListingDetailsViewModel : ViewModel() {
     private val _isClosed = MutableLiveData<Boolean>(false)
     val isClosed: LiveData<Boolean> = _isClosed
 
+    private val _timeRemaining = MutableLiveData<String>()
+    val timeRemaining: LiveData<String> = _timeRemaining
+
+    private var timerJob: Job? = null
+
     fun loadListing(listingId: String) {
         _isLoading.value = true
         viewModelScope.launch {
@@ -47,11 +55,38 @@ class ListingDetailsViewModel : ViewModel() {
                     _isLoading.value = false
                     if (listing != null) {
                         updatePermissions(listing)
+                        startTimer(listing)
                     }
                 }
             } catch (e: Exception) {
                 _error.value = e.message
                 _isLoading.value = false
+            }
+        }
+    }
+
+    private fun startTimer(listing: Listing) {
+        timerJob?.cancel()
+        val closingAt = listing.closingAt ?: return
+        
+        timerJob = viewModelScope.launch {
+            while (true) {
+                val now = Timestamp.now()
+                val diff = closingAt.toDate().time - now.toDate().time
+                
+                if (diff <= 0) {
+                    _timeRemaining.value = "Closed"
+                    updatePermissions(listing)
+                    break
+                }
+                
+                val hours = TimeUnit.MILLISECONDS.toHours(diff)
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60
+                val seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60
+                
+                _timeRemaining.value = String.format("%02dh %02dm %02ds", hours, minutes, seconds)
+                
+                delay(1000)
             }
         }
     }
@@ -62,7 +97,9 @@ class ListingDetailsViewModel : ViewModel() {
         _isOwner.value = owner
 
         val now = Timestamp.now()
-        val closed = listing.closingAt?.let { it.seconds < now.seconds } ?: false
+        // Use millisecond comparison to match the timer precisely
+        val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
+        val closed = listing.status == "CLOSED" || isExpired
         _isClosed.value = closed
 
         _canEdit.value = owner && !closed
@@ -81,5 +118,10 @@ class ListingDetailsViewModel : ViewModel() {
                 _error.value = "Failed to delete: ${e.message}"
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
     }
 }

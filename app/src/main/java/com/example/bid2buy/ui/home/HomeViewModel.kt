@@ -50,10 +50,10 @@ class HomeViewModel : ViewModel() {
     }
 
     private fun startTimer() {
-        if (timerJob != null) return
+        timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (true) {
-                delay(60000)
+                delay(1000)
                 _timerPulse.postValue(System.currentTimeMillis())
                 processAndPostListings()
             }
@@ -97,6 +97,7 @@ class HomeViewModel : ViewModel() {
 
     private fun processAndPostListings() {
         val now = Timestamp.now()
+
         var filteredList = lastFetchedListings.filter { 
             it.closingAt != null && it.closingAt.toDate().time > now.toDate().time 
         }
