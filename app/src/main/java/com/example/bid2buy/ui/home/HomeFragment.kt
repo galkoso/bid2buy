@@ -12,6 +12,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.CheckedTextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.DialogFilterBinding
@@ -48,7 +49,10 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = MyListingsAdapter()
+        adapter = MyListingsAdapter { listing ->
+            val action = HomeFragmentDirections.actionNavigationHomeToListingDetailsFragment(listing.id)
+            findNavController().navigate(action)
+        }
         binding.rvBrowse.layoutManager = LinearLayoutManager(context)
         binding.rvBrowse.adapter = adapter
     }

@@ -17,7 +17,6 @@ data class UserProfile(
     val winsCount: Int = 0,
     val totalBids: Int = 0
 ) {
-    // Computed field (not stored in Firestore)
     val successRate: Int
         get() = if (totalBids > 0) (winsCount * 100) / totalBids else 0
 }

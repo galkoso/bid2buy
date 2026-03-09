@@ -15,6 +15,13 @@ data class Listing(
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     val createdByUid: String = "",
+    val createdByName: String = "Seller",
     val photoUrls: List<String> = emptyList(),
-    val status: String = "ACTIVE"
+    val status: String = "ACTIVE",
+    
+    // Bid related fields
+    val currentHighestBid: Double? = null,
+    val highestBidderUid: String? = null,
+    val highestBidderName: String? = null,
+    val bidCount: Int = 0
 )

@@ -13,27 +13,32 @@ import com.example.bid2buy.model.Listing
 import com.google.firebase.Timestamp
 import java.util.concurrent.TimeUnit
 
-class MyListingsAdapter : ListAdapter<Listing, MyListingsAdapter.ViewHolder>(DiffCallback()) {
+class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapter<Listing, MyListingsAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemMyListingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(binding)
+        return ViewHolder(binding, onItemClick)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class ViewHolder(private val binding: ItemMyListingBinding) : RecyclerView.ViewHolder(binding.root) {
+    class ViewHolder(
+        private val binding: ItemMyListingBinding,
+        private val onItemClick: (Listing) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
+        
         fun bind(listing: Listing) {
+            binding.root.setOnClickListener { onItemClick(listing) }
+            
             binding.tvTitle.text = listing.title
             binding.tvLocation.text = listing.location
             binding.tvCondition.text = listing.condition.lowercase()
             binding.tvPrice.text = "₪${listing.startingPrice.toInt()}"
             
-            // Const values as requested
-            binding.tvBidsCount.text = "2 bids"
-            binding.ivGraph.visibility = View.VISIBLE
+            binding.tvBidsCount.text = "${listing.bidCount} bids"
+            binding.ivGraph.visibility = if (listing.bidCount > 0) View.VISIBLE else View.GONE
 
             val now = Timestamp.now()
             val closingAt = listing.closingAt

@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
+import com.example.bid2buy.repositories.FirestoreUserRepository
 import com.example.bid2buy.repositories.ListingsRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -20,7 +21,8 @@ sealed class CreateListingState {
 }
 
 class CreateListingViewModel(
-    private val repository: ListingsRepository = ListingsRepository()
+    private val listingsRepository: ListingsRepository = ListingsRepository(),
+    private val userRepository: FirestoreUserRepository = FirestoreUserRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CreateListingState>(CreateListingState.Idle)
@@ -52,10 +54,18 @@ class CreateListingViewModel(
         viewModelScope.launch {
             _uiState.value = CreateListingState.Loading
             try {
-                val listingCollection = repository.getFirestoreInstance().collection("listings")
+                val userProfile = userRepository.refreshUser(currentUser.uid)
+                
+                if (userProfile == null) {
+                    _uiState.value =
+                        CreateListingState.Error("User profile not found. Please try again.")
+                    return@launch
+                }
+
+                val listingCollection = listingsRepository.getFirestoreInstance().collection("listings")
                 val listingId = listingCollection.document().id
 
-                val photoUrls = repository.uploadImages(imageUris, listingId)
+                val photoUrls = listingsRepository.uploadImages(imageUris, listingId)
 
                 val listing = Listing(
                     id = listingId,
@@ -67,11 +77,12 @@ class CreateListingViewModel(
                     startingPrice = startingPrice,
                     closingAt = Timestamp(closingDate),
                     createdByUid = currentUser.uid,
+                    createdByName = userProfile.displayName,
                     photoUrls = photoUrls,
                     status = "ACTIVE"
                 )
 
-                repository.createListing(listing)
+                listingsRepository.createListing(listing)
                 _uiState.value = CreateListingState.Success(listingId)
             } catch (e: Exception) {
                 _uiState.value = CreateListingState.Error(e.localizedMessage ?: "An error occurred")
