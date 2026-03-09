@@ -9,13 +9,21 @@
         android:id="@+id/navigation_home"
         android:name="com.example.bid2buy.ui.home.HomeFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_navigation_home_to_listingDetailsFragment"
+            app:destination="@+id/listingDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_listings"
         android:name="com.example.bid2buy.ui.myListings.MyListingsFragment"
         android:label="@string/title_listings"
-        tools:layout="@layout/fragment_my_listings" />
+        tools:layout="@layout/fragment_my_listings">
+        <action
+            android:id="@+id/action_navigation_listings_to_listingDetailsFragment"
+            app:destination="@+id/listingDetailsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_notifications"
@@ -34,4 +42,14 @@
         android:name="com.example.bid2buy.ui.add.CreateListingFragment"
         android:label="@string/title_add"
         tools:layout="@layout/fragment_create_listing" />
+
+    <fragment
+        android:id="@+id/listingDetailsFragment"
+        android:name="com.example.bid2buy.ui.details.ListingDetailsFragment"
+        android:label="Listing Details"
+        tools:layout="@layout/fragment_listing_details">
+        <argument
+            android:name="listingId"
+            app:argType="string" />
+    </fragment>
 </navigation>

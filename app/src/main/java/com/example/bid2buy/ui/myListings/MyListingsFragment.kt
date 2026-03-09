@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bid2buy.databinding.FragmentMyListingsBinding
 import com.google.firebase.Timestamp
@@ -48,7 +49,10 @@ class MyListingsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = MyListingsAdapter()
+        adapter = MyListingsAdapter { listing ->
+            val action = MyListingsFragmentDirections.actionNavigationListingsToListingDetailsFragment(listing.id)
+            findNavController().navigate(action)
+        }
         binding.rvListings.layoutManager = LinearLayoutManager(context)
         binding.rvListings.adapter = adapter
     }

@@ -9,6 +9,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 class ListingsRepository {
 
@@ -43,6 +46,38 @@ class ListingsRepository {
         val finalListing = listing.copy(id = documentRef.id)
         documentRef.set(finalListing).await()
     }
+
+    fun getListing(listingId: String): Flow<Listing?> = callbackFlow {
+        val subscription = firestore.collection("listings").document(listingId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val listing = snapshot?.toObject(Listing::class.java)
+                trySend(listing)
+            }
+        awaitClose { subscription.remove() }
+    }
+
+    suspend fun deleteListing(listingId: String) {
+        val uid = auth.currentUser?.uid ?: return
+        
+        try {
+            val storageRef = storage.reference
+                .child("listing_photos")
+                .child(uid)
+                .child(listingId)
+            
+            val listResult = storageRef.listAll().await()
+            listResult.items.forEach { it.delete().await() }
+        } catch (e: Exception) {
+        }
+
+        firestore.collection("listings").document(listingId).delete().await()
+    }
+
+    fun getCurrentUserUid(): String? = auth.currentUser?.uid
 
     fun getFirestoreInstance() = firestore
 }
