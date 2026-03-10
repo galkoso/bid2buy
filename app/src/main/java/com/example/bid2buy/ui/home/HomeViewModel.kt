@@ -103,9 +103,8 @@ class HomeViewModel : ViewModel() {
         }
 
         currentSearchQuery?.let { query ->
-            filteredList = filteredList.filter { 
-                it.title?.contains(query, ignoreCase = true) == true ||
-                it.description?.contains(query, ignoreCase = true) == true
+            filteredList = filteredList.filter {
+                it.title.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true)
             }
         }
 

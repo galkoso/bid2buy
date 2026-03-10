@@ -57,7 +57,8 @@ class ListingDetailsFragment : Fragment() {
         }
 
         binding.btnEdit.setOnClickListener {
-            Toast.makeText(context, "Edit coming soon!", Toast.LENGTH_SHORT).show()
+            val action = ListingDetailsFragmentDirections.actionListingDetailsFragmentToEditListingFragment(args.listingId)
+            findNavController().navigate(action)
         }
 
         binding.btnDelete.setOnClickListener {
