@@ -51,5 +51,18 @@
         <argument
             android:name="listingId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_listingDetailsFragment_to_editListingFragment"
+            app:destination="@+id/editListingFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editListingFragment"
+        android:name="com.example.bid2buy.ui.details.EditListingFragment"
+        android:label="Edit Listing"
+        tools:layout="@layout/fragment_edit_listing">
+        <argument
+            android:name="listingId"
+            app:argType="string" />
     </fragment>
 </navigation>

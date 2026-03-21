@@ -5,6 +5,7 @@ import com.example.bid2buy.model.Listing
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -45,6 +46,26 @@ class ListingsRepository {
         
         val finalListing = listing.copy(id = documentRef.id)
         documentRef.set(finalListing).await()
+    }
+
+    suspend fun updateListing(listingId: String, updates: Map<String, Any>) {
+        val docRef = firestore.collection("listings").document(listingId)
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+            val currentListing = snapshot.toObject(Listing::class.java) 
+                ?: throw Exception("Listing not found")
+
+            val now = Timestamp.now()
+            if (currentListing.closingAt != null && currentListing.closingAt.compareTo(now) < 0) {
+                throw Exception("The auction has already closed")
+            }
+
+            if (currentListing.bidCount > 0) {
+                throw Exception("Bidding has already started on this item")
+            }
+
+            transaction.update(docRef, updates)
+        }.await()
     }
 
     fun getListing(listingId: String): Flow<Listing?> = callbackFlow {

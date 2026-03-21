@@ -65,8 +65,12 @@
     <string name="less_than_2_hours">&lt; 2 hours</string>
     <string name="settings">Settings</string>
 
-    <!-- Create Listing Strings -->
+    <!-- Create/Edit Listing Strings -->
     <string name="create_listing_title">Create Listing</string>
+    <string name="edit_listing_title">Edit Listing</string>
+    <string name="edit_listing_warning">This listing has bids. You can only edit title, description, and location.</string>
+    <string name="editable_details_title">Editable Details</string>
+    <string name="locked_fields_title">Locked Fields</string>
     <string name="photos_title">Photos *</string>
     <string name="photo_count_initial">0 / 10 photos</string>
     <string name="add_photo">Add</string>
@@ -89,6 +93,7 @@
     <string name="closing_time_label">Closing Time *</string>
     <string name="time_hint">--:--</string>
     <string name="publish_listing">Publish Listing</string>
+    <string name="save_changes">Save Changes</string>
     <string name="cancel">Cancel</string>
 
     <!-- Content Descriptions -->
@@ -103,6 +108,7 @@
     <string name="desc_upload_icon">Upload Icon</string>
     <string name="desc_price_up">Increase Price</string>
     <string name="desc_price_down">Decrease Price</string>
+    <string name="desc_info_icon">Information Icon</string>
 
     <!-- Home Fragment Strings -->
     <string name="browse_auctions">Browse Auctions</string>

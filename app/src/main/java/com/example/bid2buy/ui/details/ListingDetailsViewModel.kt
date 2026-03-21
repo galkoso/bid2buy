@@ -97,7 +97,6 @@ class ListingDetailsViewModel : ViewModel() {
         _isOwner.value = owner
 
         val now = Timestamp.now()
-        // Use millisecond comparison to match the timer precisely
         val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
         val closed = listing.status == "CLOSED" || isExpired
         _isClosed.value = closed
