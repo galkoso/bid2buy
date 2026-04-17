@@ -9,7 +9,6 @@ import kotlinx.coroutines.tasks.await
 class AuthRepository {
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val firestoreUserRepository = FirestoreUserRepository()
-
     val currentUser: FirebaseUser?
         get() = firebaseAuth.currentUser
 
