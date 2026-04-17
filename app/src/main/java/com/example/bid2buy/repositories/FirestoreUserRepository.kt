@@ -1,10 +1,12 @@
 package com.example.bid2buy.repositories
 
+import android.net.Uri
 import com.example.bid2buy.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.tasks.await
@@ -13,6 +15,7 @@ class FirestoreUserRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     private val usersCollection = firestore.collection("users")
 
@@ -46,12 +49,34 @@ class FirestoreUserRepository {
         return userDoc.toObject<UserProfile>()
     }
 
-    suspend fun updateUserProfile(uid: String, displayName: String) {
-        usersCollection.document(uid).update(
-            mapOf(
-                "displayName" to displayName,
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-        ).await()
+    suspend fun updateUserProfile(
+        uid: String,
+        displayName: String,
+        phoneNumber: String,
+        location: String,
+        bio: String,
+        photoURL: String? = null
+    ) {
+        val updates = mutableMapOf<String, Any>(
+            "displayName" to displayName,
+            "phoneNumber" to phoneNumber,
+            "location" to location,
+            "bio" to bio,
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+        photoURL?.let { updates["photoURL"] = it }
+
+        usersCollection.document(uid).update(updates).await()
+    }
+
+    suspend fun uploadProfileImage(uid: String, imageUri: Uri): String {
+        val storageRef = storage.reference
+            .child("listing_photos") // Changed to match the path used in listings to avoid permission issues
+            .child(uid)
+            .child("profile")
+            .child("profile.jpg")
+
+        storageRef.putFile(imageUri).await()
+        return storageRef.downloadUrl.await().toString()
     }
 }

@@ -7,6 +7,10 @@ data class UserProfile(
     val uid: String = "",
     val displayName: String = "",
     val email: String = "",
+    val phoneNumber: String = "",
+    val location: String = "",
+    val bio: String = "",
+    val photoURL: String = "",
     @ServerTimestamp val createdAt: Timestamp? = null,
     @ServerTimestamp val updatedAt: Timestamp? = null,
     

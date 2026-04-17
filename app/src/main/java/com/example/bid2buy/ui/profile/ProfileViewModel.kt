@@ -54,9 +54,16 @@ class ProfileViewModel(
 
     fun updateDisplayName(newDisplayName: String) {
         val uid = auth.currentUser?.uid ?: return
+        val currentProfile = _userProfile.value
         viewModelScope.launch {
             try {
-                repository.updateUserProfile(uid, newDisplayName)
+                repository.updateUserProfile(
+                    uid = uid,
+                    displayName = newDisplayName,
+                    phoneNumber = currentProfile?.phoneNumber ?: "",
+                    location = currentProfile?.location ?: "",
+                    bio = currentProfile?.bio ?: ""
+                )
             } catch (e: Exception) {
                 _errorMessage.value = e.localizedMessage ?: "Failed to update profile"
             }
