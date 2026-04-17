@@ -11,6 +11,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.bid2buy.AuthRepository
 import com.example.bid2buy.WelcomeActivity
 import com.example.bid2buy.databinding.FragmentProfileBinding
@@ -83,7 +85,19 @@ class ProfileFragment : Fragment() {
     private fun updateUI(profile: UserProfile) {
         binding.userName.text = profile.displayName.ifEmpty { "Anonymous User" }
         binding.userEmail.text = profile.email
-        binding.userInitials.text = getInitials(profile.displayName)
+        
+        if (profile.photoURL.isNotEmpty()) {
+            Glide.with(this)
+                .load(profile.photoURL)
+                .circleCrop()
+                .into(binding.profileImage)
+            binding.userInitials.visibility = View.GONE
+            binding.profileImage.visibility = View.VISIBLE
+        } else {
+            binding.userInitials.text = getInitials(profile.displayName)
+            binding.userInitials.visibility = View.VISIBLE
+            binding.profileImage.visibility = View.GONE
+        }
         
         binding.activeListingsCount.text = profile.activeListingsCount.toString()
         binding.activeBidsCount.text = profile.activeBidsCount.toString()
@@ -117,7 +131,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.editProfileBtn.setOnClickListener {
-            Toast.makeText(requireContext(), "Edit Profile coming soon", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToEditProfileFragment())
         }
     }
 

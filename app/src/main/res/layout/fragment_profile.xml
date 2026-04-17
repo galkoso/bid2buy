@@ -63,6 +63,12 @@
                                 app:cardCornerRadius="40dp"
                                 app:cardElevation="0dp">
 
+                                <ImageView
+                                    android:id="@+id/profileImage"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:scaleType="centerCrop" />
+
                                 <TextView
                                     android:id="@+id/userInitials"
                                     android:layout_width="match_parent"
