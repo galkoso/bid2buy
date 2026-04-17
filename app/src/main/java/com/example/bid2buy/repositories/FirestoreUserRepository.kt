@@ -58,7 +58,6 @@ class FirestoreUserRepository {
         bio: String,
         photoURL: String? = null
     ) {
-        // Fetch listings that need updating before starting the transaction
         val userListings = listingsCollection.whereEqualTo("createdByUid", uid).get().await()
         val biddedListings = listingsCollection.whereEqualTo("highestBidderUid", uid).get().await()
 
@@ -74,16 +73,14 @@ class FirestoreUserRepository {
             photoURL?.let { updates["photoURL"] = it }
             transaction.update(userRef, updates)
 
-            // Update user's name in all their listings
             userListings.documents.forEach { doc ->
                 transaction.update(doc.reference, "createdByName", displayName)
             }
 
-            // Update user's name in listings where they are the highest bidder
             biddedListings.documents.forEach { doc ->
                 transaction.update(doc.reference, "highestBidderName", displayName)
             }
-            null // Return null to satisfy the transaction block
+            null
         }.await()
     }
 
