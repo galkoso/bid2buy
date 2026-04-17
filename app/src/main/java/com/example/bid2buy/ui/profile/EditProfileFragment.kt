@@ -27,13 +27,16 @@ class EditProfileFragment : Fragment() {
     private val viewModel: EditProfileViewModel by viewModels()
     private var selectedImageUri: Uri? = null
 
+    // This launcher allows choosing from gallery, drive, and other file providers
     private val imagePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             selectedImageUri = result.data?.data
-            binding.profileImage.setImageURI(selectedImageUri)
-            binding.userInitials.visibility = View.GONE
+            if (selectedImageUri != null) {
+                Glide.with(this).load(selectedImageUri).circleCrop().into(binding.profileImage)
+                binding.userInitials.visibility = View.GONE
+            }
         }
     }
 
@@ -58,9 +61,11 @@ class EditProfileFragment : Fragment() {
         }
 
         binding.changePhotoBtn.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.type = "image/*"
-            imagePickerLauncher.launch(intent)
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+                addCategory(Intent.CATEGORY_OPENABLE)
+            }
+            imagePickerLauncher.launch(Intent.createChooser(intent, "Select Photo"))
         }
 
         binding.btnSaveChanges.setOnClickListener {
@@ -88,8 +93,15 @@ class EditProfileFragment : Fragment() {
 
                 launch {
                     viewModel.isLoading.collectLatest { isLoading ->
-                        binding.loadingOverlay.visibility = if (isLoading) View.VISIBLE else View.GONE
-                        binding.btnSaveChanges.isEnabled = !isLoading
+                        if (isLoading) {
+                            binding.btnSaveChanges.text = "Saving..."
+                            binding.btnSaveChanges.isEnabled = false
+                            binding.loadingOverlay.visibility = View.VISIBLE
+                        } else {
+                            binding.btnSaveChanges.text = "Save Changes"
+                            binding.btnSaveChanges.isEnabled = true
+                            binding.loadingOverlay.visibility = View.GONE
+                        }
                     }
                 }
 
@@ -117,7 +129,7 @@ class EditProfileFragment : Fragment() {
         binding.etLocation.setText(profile.location)
 
         if (profile.photoURL.isNotEmpty()) {
-            Glide.with(this).load(profile.photoURL).into(binding.profileImage)
+            Glide.with(this).load(profile.photoURL).circleCrop().into(binding.profileImage)
             binding.userInitials.visibility = View.GONE
         } else {
             binding.userInitials.text = getInitials(profile.displayName)

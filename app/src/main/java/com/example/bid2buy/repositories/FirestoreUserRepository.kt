@@ -18,6 +18,7 @@ class FirestoreUserRepository {
     private val storage = FirebaseStorage.getInstance()
 
     private val usersCollection = firestore.collection("users")
+    private val listingsCollection = firestore.collection("listings")
 
     suspend fun ensureUserDocumentExists() {
         val uid = auth.currentUser?.uid ?: return
@@ -57,21 +58,38 @@ class FirestoreUserRepository {
         bio: String,
         photoURL: String? = null
     ) {
-        val updates = mutableMapOf<String, Any>(
-            "displayName" to displayName,
-            "phoneNumber" to phoneNumber,
-            "location" to location,
-            "bio" to bio,
-            "updatedAt" to FieldValue.serverTimestamp()
-        )
-        photoURL?.let { updates["photoURL"] = it }
+        // Fetch listings that need updating before starting the transaction
+        val userListings = listingsCollection.whereEqualTo("createdByUid", uid).get().await()
+        val biddedListings = listingsCollection.whereEqualTo("highestBidderUid", uid).get().await()
 
-        usersCollection.document(uid).update(updates).await()
+        firestore.runTransaction { transaction ->
+            val userRef = usersCollection.document(uid)
+            val updates = mutableMapOf<String, Any>(
+                "displayName" to displayName,
+                "phoneNumber" to phoneNumber,
+                "location" to location,
+                "bio" to bio,
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+            photoURL?.let { updates["photoURL"] = it }
+            transaction.update(userRef, updates)
+
+            // Update user's name in all their listings
+            userListings.documents.forEach { doc ->
+                transaction.update(doc.reference, "createdByName", displayName)
+            }
+
+            // Update user's name in listings where they are the highest bidder
+            biddedListings.documents.forEach { doc ->
+                transaction.update(doc.reference, "highestBidderName", displayName)
+            }
+            null // Return null to satisfy the transaction block
+        }.await()
     }
 
     suspend fun uploadProfileImage(uid: String, imageUri: Uri): String {
         val storageRef = storage.reference
-            .child("listing_photos") // Changed to match the path used in listings to avoid permission issues
+            .child("listing_photos")
             .child(uid)
             .child("profile")
             .child("profile.jpg")

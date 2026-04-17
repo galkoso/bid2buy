@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.UserProfile
 import com.example.bid2buy.repositories.FirestoreUserRepository
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,9 +38,6 @@ class ProfileViewModel(
 
         viewModelScope.launch {
             try {
-                // Add a 2-second delay to simulate loading and see the shimmer
-                delay(2000)
-
                 repository.observeUser(uid).collectLatest { profile ->
                     _userProfile.value = profile
                     _successRate.value = profile?.successRate ?: 0
