@@ -3,6 +3,7 @@ package com.example.bid2buy.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.UserProfile
+import com.example.bid2buy.repositories.BidsRepository
 import com.example.bid2buy.repositories.FirestoreUserRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 
 class ProfileViewModel(
     private val repository: FirestoreUserRepository = FirestoreUserRepository(),
+    private val bidsRepository: BidsRepository = BidsRepository(),
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) : ViewModel() {
 
@@ -28,9 +30,13 @@ class ProfileViewModel(
     private val _activeListingsCount = MutableStateFlow(0)
     val activeListingsCount: StateFlow<Int> = _activeListingsCount.asStateFlow()
 
+    private val _activeBidsCount = MutableStateFlow(0)
+    val activeBidsCount: StateFlow<Int> = _activeBidsCount.asStateFlow()
+
     init {
         loadUserProfile()
         loadActiveListingsCount()
+        loadActiveBidsCount()
     }
 
     private fun loadUserProfile() {
@@ -61,6 +67,19 @@ class ProfileViewModel(
                 }
             } catch (e: Exception) {
                 _activeListingsCount.value = _userProfile.value?.activeListingsCount ?: 0
+            }
+        }
+    }
+
+    private fun loadActiveBidsCount() {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                bidsRepository.observeActiveBidsCount(uid).collectLatest { count ->
+                    _activeBidsCount.value = count
+                }
+            } catch (e: Exception) {
+                _activeBidsCount.value = _userProfile.value?.activeBidsCount ?: 0
             }
         }
     }

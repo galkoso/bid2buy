@@ -71,6 +71,12 @@ class ProfileFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.activeBidsCount.collectLatest { count ->
+                        binding.activeBidsCount.text = count.toString()
+                    }
+                }
+
+                launch {
                     viewModel.errorMessage.collectLatest { message ->
                         message?.let {
                             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
@@ -106,7 +112,7 @@ class ProfileFragment : Fragment() {
             binding.profileImage.visibility = View.GONE
         }
         
-        binding.activeBidsCount.text = profile.activeBidsCount.toString()
+        // Count labels are updated via separate flows in setupObservers()
         binding.winsCount.text = profile.winsCount.toString()
         binding.totalItemsSold.text = profile.totalItemsSold.toString()
 
@@ -140,17 +146,35 @@ class ProfileFragment : Fragment() {
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToEditProfileFragment())
         }
 
-        binding.activeListingsCard.isClickable = false
-        binding.activeListingsCard.isFocusable = false
+        binding.activeListingsCard.setOnClickListener {
+            navigateToMyListings()
+        }
+
+        binding.activeBidsCard.setOnClickListener {
+            navigateToBids()
+        }
+
+        binding.winsCard.setOnClickListener {
+            navigateToBids()
+        }
 
         binding.myListingsSection.setOnClickListener {
             navigateToMyListings()
+        }
+
+        binding.myBidsSection.setOnClickListener {
+            navigateToBids()
         }
     }
 
     private fun navigateToMyListings() {
         val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
         bottomNav.selectedItemId = R.id.navigation_listings
+    }
+
+    private fun navigateToBids() {
+        val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
+        bottomNav.selectedItemId = R.id.navigation_notifications
     }
 
     override fun onDestroyView() {
