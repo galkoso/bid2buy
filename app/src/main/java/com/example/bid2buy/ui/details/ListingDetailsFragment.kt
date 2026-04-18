@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -15,6 +14,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentListingDetailsBinding
 import com.example.bid2buy.model.Listing
+import com.example.bid2buy.ui.bid.PlaceBidBottomSheetFragment
 import com.google.android.material.tabs.TabLayoutMediator
 
 class ListingDetailsFragment : Fragment() {
@@ -43,6 +43,7 @@ class ListingDetailsFragment : Fragment() {
         viewModel.loadListing(args.listingId)
         
         setupClickListeners()
+        setupFragmentResultListeners()
     }
 
     private fun setupHeader() {
@@ -53,7 +54,14 @@ class ListingDetailsFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnPlaceBid.setOnClickListener {
-            Toast.makeText(context, "Bidding coming soon!", Toast.LENGTH_SHORT).show()
+            val listing = viewModel.listing.value ?: return@setOnClickListener
+            val bottomSheet = PlaceBidBottomSheetFragment.newInstance(
+                listingId = listing.id,
+                currentHighestBid = listing.currentHighestBid ?: 0.0,
+                startingPrice = listing.startingPrice,
+                bidCount = listing.bidCount
+            )
+            bottomSheet.show(parentFragmentManager, PlaceBidBottomSheetFragment.TAG)
         }
 
         binding.btnEdit.setOnClickListener {
@@ -67,6 +75,15 @@ class ListingDetailsFragment : Fragment() {
         }
 
         binding.btnViewBids.setOnClickListener {
+            // Future implementation: show bid history
+        }
+    }
+
+    private fun setupFragmentResultListeners() {
+        parentFragmentManager.setFragmentResultListener("bid_placed", viewLifecycleOwner) { _, bundle ->
+            if (bundle.getBoolean("success")) {
+                viewModel.loadListing(args.listingId)
+            }
         }
     }
 
@@ -117,12 +134,10 @@ class ListingDetailsFragment : Fragment() {
             binding.tvStatus.text = "Closed"
             binding.tvStatus.setBackgroundResource(R.drawable.bg_status_closed)
             binding.tvStatus.setTextColor(Color.WHITE)
-            binding.tvStatus.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
         } else {
             binding.tvStatus.text = "Active"
             binding.tvStatus.setBackgroundResource(R.drawable.bg_status_active)
             binding.tvStatus.setTextColor(Color.WHITE)
-            binding.tvStatus.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
         }
     }
 
@@ -142,10 +157,8 @@ class ListingDetailsFragment : Fragment() {
         binding.tvLocation.text = listing.location
         binding.tvDescription.text = listing.description
         
-        // Seller name
         binding.tvSellerName.text = "by ${listing.createdByName}"
         
-        // Price and Bid Info
         val currentBid = listing.currentHighestBid
         if (currentBid != null) {
             binding.tvCurrentBid.text = "₪${currentBid.toInt()}"
@@ -161,7 +174,6 @@ class ListingDetailsFragment : Fragment() {
         binding.tvStartingPrice.text = "Starting price: ₪${listing.startingPrice.toInt()}"
         binding.btnViewBids.text = "View ${listing.bidCount} bids"
 
-        // Image Gallery
         if (listing.photoUrls.isNotEmpty()) {
             val adapter = ImageGalleryAdapter(listing.photoUrls)
             binding.vpImageGallery.adapter = adapter
