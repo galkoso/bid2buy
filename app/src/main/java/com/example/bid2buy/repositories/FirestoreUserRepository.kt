@@ -1,7 +1,9 @@
 package com.example.bid2buy.repositories
 
 import android.net.Uri
+import com.example.bid2buy.model.Listing
 import com.example.bid2buy.model.UserProfile
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -101,8 +103,12 @@ class FirestoreUserRepository {
             .whereEqualTo("createdByUid", uid)
             .whereEqualTo("status", "ACTIVE")
             .addSnapshotListener { snapshot, _ ->
-                snapshot?.let {
-                    countFlow.value = it.size()
+                snapshot?.let { querySnapshot ->
+                    val now = Timestamp.now()
+                    val activeCount = querySnapshot.toObjects(Listing::class.java).count { listing ->
+                        listing.closingAt != null && listing.closingAt.toDate().time > now.toDate().time
+                    }
+                    countFlow.value = activeCount
                 }
             }
         return countFlow
