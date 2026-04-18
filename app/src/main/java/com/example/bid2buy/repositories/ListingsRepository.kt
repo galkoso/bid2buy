@@ -29,7 +29,7 @@ class ListingsRepository {
                     .child("listing_photos")
                     .child(uid)
                     .child(listingId)
-                    .child("photo_$index.jpg")
+                    .child("photo_${System.currentTimeMillis()}_$index.jpg")
                 
                 storageRef.putFile(uri).await()
                 storageRef.downloadUrl.await().toString()

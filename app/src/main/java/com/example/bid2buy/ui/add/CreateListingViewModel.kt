@@ -8,9 +8,11 @@ import com.example.bid2buy.repositories.FirestoreUserRepository
 import com.example.bid2buy.repositories.ListingsRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 sealed class CreateListingState {
@@ -51,38 +53,37 @@ class CreateListingViewModel(
             return
         }
 
+        val urisToUpload = ArrayList(imageUris)
+
         viewModelScope.launch {
             _uiState.value = CreateListingState.Loading
             try {
-                val userProfile = userRepository.refreshUser(currentUser.uid)
-                
-                if (userProfile == null) {
-                    _uiState.value =
-                        CreateListingState.Error("User profile not found. Please try again.")
-                    return@launch
+                val listingId = withContext(Dispatchers.IO) {
+                    val userProfile = userRepository.refreshUser(currentUser.uid)
+                    
+                    val currentListingId = listingsRepository.getFirestoreInstance().collection("listings").document().id
+
+                    val photoUrls = listingsRepository.uploadImages(urisToUpload, currentListingId)
+
+                    val listing = Listing(
+                        id = currentListingId,
+                        title = title,
+                        description = description,
+                        category = category,
+                        condition = condition,
+                        location = location,
+                        startingPrice = startingPrice,
+                        closingAt = Timestamp(closingDate),
+                        createdByUid = currentUser.uid,
+                        createdByName = userProfile?.displayName ?: currentUser.displayName ?: "Seller",
+                        photoUrls = photoUrls,
+                        status = "ACTIVE"
+                    )
+
+                    listingsRepository.createListing(listing)
+                    currentListingId
                 }
 
-                val listingCollection = listingsRepository.getFirestoreInstance().collection("listings")
-                val listingId = listingCollection.document().id
-
-                val photoUrls = listingsRepository.uploadImages(imageUris, listingId)
-
-                val listing = Listing(
-                    id = listingId,
-                    title = title,
-                    description = description,
-                    category = category,
-                    condition = condition,
-                    location = location,
-                    startingPrice = startingPrice,
-                    closingAt = Timestamp(closingDate),
-                    createdByUid = currentUser.uid,
-                    createdByName = userProfile.displayName,
-                    photoUrls = photoUrls,
-                    status = "ACTIVE"
-                )
-
-                listingsRepository.createListing(listing)
                 _uiState.value = CreateListingState.Success(listingId)
             } catch (e: Exception) {
                 _uiState.value = CreateListingState.Error(e.localizedMessage ?: "An error occurred")

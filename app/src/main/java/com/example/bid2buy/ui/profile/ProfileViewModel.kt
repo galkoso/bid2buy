@@ -30,6 +30,7 @@ class ProfileViewModel(
 
     init {
         loadUserProfile()
+        loadActiveListingsCount()
     }
 
     private fun loadUserProfile() {
@@ -44,10 +45,22 @@ class ProfileViewModel(
                 repository.observeUser(uid).collectLatest { profile ->
                     _userProfile.value = profile
                     _successRate.value = profile?.successRate ?: 0
-                    _activeListingsCount.value = profile?.activeListingsCount ?: 0
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.localizedMessage ?: "An error occurred"
+            }
+        }
+    }
+
+    private fun loadActiveListingsCount() {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                repository.observeActiveListingsCount(uid).collectLatest { count ->
+                    _activeListingsCount.value = count
+                }
+            } catch (e: Exception) {
+                _activeListingsCount.value = _userProfile.value?.activeListingsCount ?: 0
             }
         }
     }
