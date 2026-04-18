@@ -33,10 +33,14 @@ class ProfileViewModel(
     private val _activeBidsCount = MutableStateFlow(0)
     val activeBidsCount: StateFlow<Int> = _activeBidsCount.asStateFlow()
 
+    private val _winsCount = MutableStateFlow(0)
+    val winsCount: StateFlow<Int> = _winsCount.asStateFlow()
+
     init {
         loadUserProfile()
         loadActiveListingsCount()
         loadActiveBidsCount()
+        loadWinsCount()
     }
 
     private fun loadUserProfile() {
@@ -80,6 +84,19 @@ class ProfileViewModel(
                 }
             } catch (e: Exception) {
                 _activeBidsCount.value = _userProfile.value?.activeBidsCount ?: 0
+            }
+        }
+    }
+
+    private fun loadWinsCount() {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                bidsRepository.observeWinsCount(uid).collectLatest { count ->
+                    _winsCount.value = count
+                }
+            } catch (e: Exception) {
+                _winsCount.value = _userProfile.value?.winsCount ?: 0
             }
         }
     }

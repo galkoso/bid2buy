@@ -122,6 +122,26 @@ class BidsRepository {
         }
     }
 
+    fun observeWinsCount(uid: String): Flow<Int> = callbackFlow {
+        val listener = firestore.collection("listings")
+            .whereEqualTo("highestBidderUid", uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val now = Timestamp.now()
+                val listings = snapshot?.toObjects(Listing::class.java) ?: emptyList()
+                val winsCount = listings.count { listing ->
+                    val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
+                    val isClosed = listing.status == "CLOSED" || isExpired
+                    isClosed
+                }
+                trySend(winsCount)
+            }
+        awaitClose { listener.remove() }
+    }
+
     suspend fun getListingsByIds(listingIds: List<String>): List<Listing> {
         if (listingIds.isEmpty()) return emptyList()
         return listingIds.chunked(10).flatMap { chunk ->
