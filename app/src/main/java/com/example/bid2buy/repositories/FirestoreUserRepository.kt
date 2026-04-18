@@ -94,4 +94,17 @@ class FirestoreUserRepository {
         storageRef.putFile(imageUri).await()
         return storageRef.downloadUrl.await().toString()
     }
+
+    fun observeActiveListingsCount(uid: String): Flow<Int> {
+        val countFlow = MutableStateFlow(0)
+        listingsCollection
+            .whereEqualTo("createdByUid", uid)
+            .whereEqualTo("status", "ACTIVE")
+            .addSnapshotListener { snapshot, _ ->
+                snapshot?.let {
+                    countFlow.value = it.size()
+                }
+            }
+        return countFlow
+    }
 }

@@ -140,9 +140,8 @@ class ProfileFragment : Fragment() {
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToEditProfileFragment())
         }
 
-        binding.activeListingsCard.setOnClickListener {
-            navigateToMyListings()
-        }
+        binding.activeListingsCard.isClickable = false
+        binding.activeListingsCard.isFocusable = false
 
         binding.myListingsSection.setOnClickListener {
             navigateToMyListings()
