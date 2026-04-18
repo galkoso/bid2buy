@@ -5,7 +5,11 @@ import com.example.bid2buy.model.Listing
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class BidsRepository {
@@ -75,11 +79,51 @@ class BidsRepository {
             .toObjects(Bid::class.java)
     }
 
+    fun observeActiveBidsCount(uid: String): Flow<Int> = callbackFlow {
+        var listingListener: ListenerRegistration? = null
+        
+        val bidsListener = firestore.collection("bids")
+            .whereEqualTo("bidderUid", uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val userBids = snapshot?.toObjects(Bid::class.java) ?: emptyList()
+                val listingIds = userBids.map { it.listingId }.distinct()
+
+                listingListener?.remove()
+                
+                if (listingIds.isEmpty()) {
+                    trySend(0)
+                } else {
+                    listingListener = firestore.collection("listings")
+                        .whereIn("id", listingIds.take(10))
+                        .addSnapshotListener { listingSnapshot, listingError ->
+                            if (listingError != null) {
+                                trySend(0)
+                                return@addSnapshotListener
+                            }
+                            val now = Timestamp.now()
+                            val listings = listingSnapshot?.toObjects(Listing::class.java) ?: emptyList()
+                            val activeCount = listings.count { listing ->
+                                val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
+                                listing.status == "ACTIVE" && !isExpired
+                            }
+                            trySend(activeCount)
+                        }
+                }
+            }
+            
+        awaitClose { 
+            bidsListener.remove()
+            listingListener?.remove()
+        }
+    }
+
     suspend fun getListingsByIds(listingIds: List<String>): List<Listing> {
         if (listingIds.isEmpty()) return emptyList()
-        // Firestore 'in' query supports up to 10 elements. 
-        // For a school project, we can chunk it or assume small amount for now.
-        // Let's implement a simple chunked fetch.
         return listingIds.chunked(10).flatMap { chunk ->
             firestore.collection("listings")
                 .whereIn("id", chunk)
