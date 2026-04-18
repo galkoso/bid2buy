@@ -53,7 +53,6 @@ class CreateListingViewModel(
             return
         }
 
-        // Copy list to avoid concurrent modification issues
         val urisToUpload = ArrayList(imageUris)
 
         viewModelScope.launch {
@@ -64,7 +63,6 @@ class CreateListingViewModel(
                     
                     val currentListingId = listingsRepository.getFirestoreInstance().collection("listings").document().id
 
-                    // Upload images in background
                     val photoUrls = listingsRepository.uploadImages(urisToUpload, currentListingId)
 
                     val listing = Listing(

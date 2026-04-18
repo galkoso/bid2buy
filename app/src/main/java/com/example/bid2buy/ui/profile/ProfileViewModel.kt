@@ -60,7 +60,6 @@ class ProfileViewModel(
                     _activeListingsCount.value = count
                 }
             } catch (e: Exception) {
-                // If count observation fails, we can fall back to the count in the profile if available
                 _activeListingsCount.value = _userProfile.value?.activeListingsCount ?: 0
             }
         }
