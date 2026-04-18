@@ -157,7 +157,7 @@ class CreateListingFragment : Fragment() {
     }
 
     private fun validateInputs(): Boolean {
-        if (binding.etTitle.text.toString().isEmpty()) {
+        if (binding.etTitle.text.toString().trim().isEmpty()) {
             Toast.makeText(requireContext(), "Title is required", Toast.LENGTH_SHORT).show()
             return false
         }
@@ -180,6 +180,11 @@ class CreateListingFragment : Fragment() {
 
         if (binding.autoCondition.text.isEmpty()) {
             Toast.makeText(requireContext(), "Please select a condition", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (binding.etLocation.text.toString().trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Location is required", Toast.LENGTH_SHORT).show()
             return false
         }
 
