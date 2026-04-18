@@ -25,6 +25,9 @@ class ProfileViewModel(
     private val _successRate = MutableStateFlow(0)
     val successRate: StateFlow<Int> = _successRate.asStateFlow()
 
+    private val _activeListingsCount = MutableStateFlow(0)
+    val activeListingsCount: StateFlow<Int> = _activeListingsCount.asStateFlow()
+
     init {
         loadUserProfile()
     }
@@ -41,6 +44,7 @@ class ProfileViewModel(
                 repository.observeUser(uid).collectLatest { profile ->
                     _userProfile.value = profile
                     _successRate.value = profile?.successRate ?: 0
+                    _activeListingsCount.value = profile?.activeListingsCount ?: 0
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.localizedMessage ?: "An error occurred"

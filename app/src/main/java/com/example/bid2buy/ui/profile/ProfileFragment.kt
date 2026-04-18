@@ -14,9 +14,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.bid2buy.AuthRepository
+import com.example.bid2buy.R
 import com.example.bid2buy.WelcomeActivity
 import com.example.bid2buy.databinding.FragmentProfileBinding
 import com.example.bid2buy.model.UserProfile
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -63,11 +65,16 @@ class ProfileFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.activeListingsCount.collectLatest { count ->
+                        binding.activeListingsCount.text = count.toString()
+                    }
+                }
+
+                launch {
                     viewModel.errorMessage.collectLatest { message ->
                         message?.let {
                             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
                             viewModel.clearError()
-                            // Also hide shimmer if there's an error so the user isn't stuck
                             hideShimmer()
                         }
                     }
@@ -99,7 +106,6 @@ class ProfileFragment : Fragment() {
             binding.profileImage.visibility = View.GONE
         }
         
-        binding.activeListingsCount.text = profile.activeListingsCount.toString()
         binding.activeBidsCount.text = profile.activeBidsCount.toString()
         binding.winsCount.text = profile.winsCount.toString()
         binding.totalItemsSold.text = profile.totalItemsSold.toString()
@@ -133,6 +139,19 @@ class ProfileFragment : Fragment() {
         binding.editProfileBtn.setOnClickListener {
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToEditProfileFragment())
         }
+
+        binding.activeListingsCard.setOnClickListener {
+            navigateToMyListings()
+        }
+
+        binding.myListingsSection.setOnClickListener {
+            navigateToMyListings()
+        }
+    }
+
+    private fun navigateToMyListings() {
+        val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
+        bottomNav.selectedItemId = R.id.navigation_listings
     }
 
     override fun onDestroyView() {
