@@ -7,7 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,6 +27,7 @@ class HomeViewModel : ViewModel() {
 
     private var lastFetchedListings: List<Listing> = emptyList()
     private var timerJob: Job? = null
+    private var listenerRegistration: ListenerRegistration? = null
 
     private var currentCategory: String? = null
     private var currentCondition: String? = null
@@ -33,15 +35,20 @@ class HomeViewModel : ViewModel() {
     private var currentSearchQuery: String? = null
 
     fun startListening() {
+        if (listenerRegistration != null) return
+
         _isLoading.value = true
-        repository.getFirestoreInstance()
+        listenerRegistration = repository.getFirestoreInstance()
             .collection("listings")
             .whereEqualTo("status", "ACTIVE")
-            .get()
-            .addOnCompleteListener { task ->
+            .addSnapshotListener { snapshot, error ->
                 _isLoading.value = false
-                if (task.isSuccessful) {
-                    lastFetchedListings = task.result?.toObjects(Listing::class.java) ?: emptyList()
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    // map to objects and trigger process
+                    lastFetchedListings = snapshot.toObjects(Listing::class.java)
                     processAndPostListings()
                 }
             }
@@ -61,25 +68,14 @@ class HomeViewModel : ViewModel() {
     }
 
     fun refresh() {
-        _isLoading.value = true
-        repository.getFirestoreInstance()
-            .collection("listings")
-            .whereEqualTo("status", "ACTIVE")
-            .get(Source.SERVER)
-            .addOnCompleteListener { task ->
-                _isLoading.value = false
-                if (task.isSuccessful) {
-                    lastFetchedListings = task.result?.toObjects(Listing::class.java) ?: emptyList()
-                }
-                _timerPulse.postValue(System.currentTimeMillis())
-                processAndPostListings()
-            }
+        // Trigger a fresh process
+        processAndPostListings()
     }
 
     fun setFilters(category: String?, condition: String?, priceRange: String?) {
-        currentCategory = if (category == "All Categories") null else category
-        currentCondition = if (condition == "All Conditions") null else condition
-        currentPriceRange = if (priceRange == "All Prices") null else priceRange
+        currentCategory = if (category == "All Categories" || category.isNullOrBlank()) null else category
+        currentCondition = if (condition == "All Conditions" || condition.isNullOrBlank()) null else condition
+        currentPriceRange = if (priceRange == "All Prices" || priceRange.isNullOrBlank()) null else priceRange
         processAndPostListings()
     }
 
@@ -98,40 +94,51 @@ class HomeViewModel : ViewModel() {
     private fun processAndPostListings() {
         val now = Timestamp.now()
 
+        // 1. Filter out expired ones
         var filteredList = lastFetchedListings.filter { 
             it.closingAt != null && it.closingAt.toDate().time > now.toDate().time 
         }
 
+        // 2. Search
         currentSearchQuery?.let { query ->
             filteredList = filteredList.filter {
                 it.title.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true)
             }
         }
 
+        // 3. Category
         currentCategory?.let { cat ->
             filteredList = filteredList.filter { it.category == cat }
         }
 
+        // 4. Condition
         currentCondition?.let { cond ->
             filteredList = filteredList.filter { it.condition == cond }
         }
 
+        // 5. Price Range
         currentPriceRange?.let { range ->
             filteredList = filteredList.filter { listing ->
+                val priceToShow = if (listing.bidCount > 0) listing.currentHighestBid ?: listing.startingPrice else listing.startingPrice
                 when (range) {
-                    "Under ₪100" -> listing.startingPrice < 100
-                    "₪100 - ₪500" -> listing.startingPrice in 100.0..500.0
-                    "Over ₪500" -> listing.startingPrice > 500
+                    "Under ₪100" -> priceToShow < 100
+                    "₪100 - ₪500" -> priceToShow in 100.0..500.0
+                    "Over ₪500" -> priceToShow > 500
                     else -> true
                 }
             }
         }
 
+        // 6. Sort
         val sortedList = filteredList.sortedBy { it.closingAt }
-        _listings.postValue(sortedList)
+        
+        // Force update by sending a NEW list instance
+        _listings.postValue(ArrayList(sortedList))
     }
 
     fun stopListening() {
+        listenerRegistration?.remove()
+        listenerRegistration = null
         timerJob?.cancel()
         timerJob = null
     }

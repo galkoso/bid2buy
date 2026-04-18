@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bid2buy.databinding.FragmentMyListingsBinding
+import com.google.android.material.tabs.TabLayout
 import com.google.firebase.Timestamp
 
 class MyListingsFragment : Fragment() {
@@ -63,11 +64,11 @@ class MyListingsFragment : Fragment() {
         }
 
         viewModel.activeCount.observe(viewLifecycleOwner) { count ->
-            binding.btnActive.text = "Active ($count)"
+            binding.tabLayout.getTabAt(0)?.text = "Active ($count)"
         }
 
         viewModel.closedCount.observe(viewLifecycleOwner) { count ->
-            binding.btnClosed.text = "Closed ($count)"
+            binding.tabLayout.getTabAt(1)?.text = "Closed ($count)"
         }
 
         viewModel.listings.observe(viewLifecycleOwner) { listings ->
@@ -81,16 +82,20 @@ class MyListingsFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.toggleGroup.addOnButtonCheckedListener { _, _, _ ->
-            updateList()
-        }
+        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                updateList()
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
     }
 
     private fun updateList() {
         val allListings = viewModel.listings.value ?: emptyList()
         val now = Timestamp.now()
         
-        val filteredListings = if (binding.btnActive.isChecked) {
+        val filteredListings = if (binding.tabLayout.selectedTabPosition == 0) {
             // Sort Active: Soonest to close first (Ascending)
             allListings.filter { it.closingAt != null && it.closingAt.toDate().time > now.toDate().time }
                 .sortedBy { it.closingAt }

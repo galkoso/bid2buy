@@ -35,7 +35,14 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
             binding.tvTitle.text = listing.title
             binding.tvLocation.text = listing.location
             binding.tvCondition.text = listing.condition.lowercase()
-            binding.tvPrice.text = "₪${listing.startingPrice.toInt()}"
+            
+            // Fix: Display the current highest bid if there are bids, otherwise the starting price.
+            val currentPrice = if (listing.bidCount > 0) {
+                listing.currentHighestBid ?: listing.startingPrice
+            } else {
+                listing.startingPrice
+            }
+            binding.tvPrice.text = "₪${currentPrice.toInt()}"
             
             binding.tvBidsCount.text = "${listing.bidCount} bids"
             binding.ivGraph.visibility = if (listing.bidCount > 0) View.VISIBLE else View.GONE
@@ -47,7 +54,7 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
                 val diff = closingAt.toDate().time - now.toDate().time
                 if (diff > 0) {
                     val hours = TimeUnit.MILLISECONDS.toHours(diff)
-                    val minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60
+                    val minutes = (TimeUnit.MILLISECONDS.toMinutes(diff) % 60)
                     binding.tvTimeLeft.text = "${hours}h ${minutes}m"
                     binding.tvStatus.text = "Active"
                     binding.tvStatus.setBackgroundResource(R.drawable.bg_status_active)
