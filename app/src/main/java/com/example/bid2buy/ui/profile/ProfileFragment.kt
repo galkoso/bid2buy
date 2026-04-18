@@ -77,6 +77,12 @@ class ProfileFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.winsCount.collectLatest { count ->
+                        binding.winsCount.text = count.toString()
+                    }
+                }
+
+                launch {
                     viewModel.errorMessage.collectLatest { message ->
                         message?.let {
                             Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
@@ -113,7 +119,6 @@ class ProfileFragment : Fragment() {
         }
         
         // Count labels are updated via separate flows in setupObservers()
-        binding.winsCount.text = profile.winsCount.toString()
         binding.totalItemsSold.text = profile.totalItemsSold.toString()
 
         profile.createdAt?.let {
