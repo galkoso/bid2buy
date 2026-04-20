@@ -1,4 +1,4 @@
-package com.example.bid2buy.ui.notifications
+package com.example.bid2buy.ui.bids
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

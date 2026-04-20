@@ -26,12 +26,12 @@
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.example.bid2buy.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications">
+        android:id="@+id/navigation_bids"
+        android:name="com.example.bid2buy.ui.bids.BidsFragment"
+        android:label="@string/title_bids"
+        tools:layout="@layout/fragment_bids">
         <action
-            android:id="@+id/action_navigation_notifications_to_listingDetailsFragment"
+            android:id="@+id/action_navigation_bids_to_listingDetailsFragment"
             app:destination="@+id/listingDetailsFragment" />
     </fragment>
 

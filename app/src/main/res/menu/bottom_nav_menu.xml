@@ -17,9 +17,9 @@
         android:enabled="false" />
 
     <item
-        android:id="@+id/navigation_notifications"
+        android:id="@+id/navigation_bids"
         android:icon="@drawable/ic_bids"
-        android:title="@string/title_notifications" />
+        android:title="@string/title_bids" />
 
     <item
         android:id="@+id/navigation_profile"
