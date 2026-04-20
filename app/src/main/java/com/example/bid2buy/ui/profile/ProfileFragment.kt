@@ -179,7 +179,7 @@ class ProfileFragment : Fragment() {
 
     private fun navigateToBids() {
         val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
-        bottomNav.selectedItemId = R.id.navigation_notifications
+        bottomNav.selectedItemId = R.id.navigation_bids
     }
 
     override fun onDestroyView() {
