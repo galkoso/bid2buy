@@ -22,6 +22,17 @@ class MainActivity : AppCompatActivity() {
 
         binding.navView.setupWithNavController(navController)
 
+        // Prevent re-navigating to Bids (and resetting the tab) if already there
+        binding.navView.setOnItemReselectedListener { item ->
+            if (item.itemId == R.id.navigation_bids && navController.currentDestination?.id == R.id.navigation_bids) {
+                // Do nothing to keep current tab state
+                return@setOnItemReselectedListener
+            }
+            
+            // For other items, you can either do nothing or implement scroll to top
+            // Default behavior for reselection in NavigationUI is often to pop to the root of the tab
+        }
+
         binding.fabAdd.setOnClickListener {
             navController.navigate(R.id.navigation_add)
         }
