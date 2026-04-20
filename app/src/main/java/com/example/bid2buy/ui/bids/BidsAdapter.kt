@@ -1,4 +1,4 @@
-package com.example.bid2buy.ui.notifications
+package com.example.bid2buy.ui.bids
 
 import android.content.res.ColorStateList
 import android.graphics.Color
