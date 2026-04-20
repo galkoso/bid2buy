@@ -6,8 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bid2buy.databinding.FragmentBidsBinding
 import com.google.android.material.tabs.TabLayout
@@ -17,7 +18,9 @@ class BidsFragment : Fragment() {
     private var _binding: FragmentBidsBinding? = null
     private val binding get() = _binding!!
     
-    private val viewModel: BidsViewModel by viewModels()
+    // Use activityViewModels to persist data across navigations and prevent flickering
+    private val viewModel: BidsViewModel by activityViewModels()
+    private val args: BidsFragmentArgs by navArgs()
     private lateinit var adapter: BidsAdapter
 
     override fun onCreateView(
@@ -33,14 +36,24 @@ class BidsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         setupRecyclerView()
+        
+        // Select the tab immediately to avoid flickering from the default tab
+        val initialTab = args.initialTab
+        if (initialTab in 0..2) {
+            binding.tabLayout.getTabAt(initialTab)?.select()
+        }
+        
         setupTabs()
         setupObservers()
         setupSwipeRefresh()
+
+        // Populate the list immediately with cached data if available
+        updateListForTab(initialTab)
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadBids()
+        viewModel.loadBids(forceRefresh = false)
     }
 
     private fun setupRecyclerView() {
@@ -73,12 +86,17 @@ class BidsFragment : Fragment() {
         adapter.submitList(list)
         
         if (list.isEmpty()) {
-            binding.emptyState.visibility = View.VISIBLE
-            binding.emptyStateText.text = when (position) {
-                0 -> "You have no active bids"
-                1 -> "You haven't won any auctions yet"
-                2 -> "No lost auctions found"
-                else -> ""
+            // Only show empty state if we're not currently loading data for the first time
+            if (viewModel.isLoading.value != true) {
+                binding.emptyState.visibility = View.VISIBLE
+                binding.emptyStateText.text = when (position) {
+                    0 -> "You have no active bids"
+                    1 -> "You haven't won any auctions yet"
+                    2 -> "No lost auctions found"
+                    else -> ""
+                }
+            } else {
+                binding.emptyState.visibility = View.GONE
             }
         } else {
             binding.emptyState.visibility = View.GONE
@@ -106,8 +124,18 @@ class BidsFragment : Fragment() {
         }
         
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.swipeRefresh.isRefreshing = isLoading
-            binding.progressBar.visibility = if (isLoading && !binding.swipeRefresh.isRefreshing) View.VISIBLE else View.GONE
+            if (isLoading) {
+                // Show ProgressBar if this is the first load and we aren't swiping to refresh
+                if (!binding.swipeRefresh.isRefreshing && adapter.itemCount == 0) {
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.emptyState.visibility = View.GONE
+                }
+            } else {
+                binding.swipeRefresh.isRefreshing = false
+                binding.progressBar.visibility = View.GONE
+                // Trigger empty state check now that loading is finished
+                updateListForTab(binding.tabLayout.selectedTabPosition)
+            }
         }
         
         viewModel.error.observe(viewLifecycleOwner) { error ->
@@ -134,7 +162,7 @@ class BidsFragment : Fragment() {
 
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
-            viewModel.loadBids()
+            viewModel.loadBids(forceRefresh = true)
         }
     }
 

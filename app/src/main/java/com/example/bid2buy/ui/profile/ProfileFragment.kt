@@ -156,11 +156,11 @@ class ProfileFragment : Fragment() {
         }
 
         binding.activeBidsCard.setOnClickListener {
-            navigateToBids()
+            navigateToBids(0)
         }
 
         binding.winsCard.setOnClickListener {
-            navigateToBids()
+            navigateToBids(1)
         }
 
         binding.myListingsSection.setOnClickListener {
@@ -168,7 +168,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.myBidsSection.setOnClickListener {
-            navigateToBids()
+            navigateToBids(0)
         }
     }
 
@@ -177,9 +177,9 @@ class ProfileFragment : Fragment() {
         bottomNav.selectedItemId = R.id.navigation_listings
     }
 
-    private fun navigateToBids() {
-        val bottomNav = requireActivity().findViewById<BottomNavigationView>(R.id.nav_view)
-        bottomNav.selectedItemId = R.id.navigation_bids
+    private fun navigateToBids(initialTab: Int) {
+        val action = ProfileFragmentDirections.actionNavigationProfileToNavigationBids(initialTab)
+        findNavController().navigate(action)
     }
 
     override fun onDestroyView() {
