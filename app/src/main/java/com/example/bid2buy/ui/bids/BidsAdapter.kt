@@ -5,6 +5,8 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -97,14 +99,18 @@ class BidsAdapter(private val onItemClick: (Listing) -> Unit) :
 
         private fun setupStatusBadge(iconRes: Int?, text: String, bgColor: String, textColor: String) {
             binding.statusText.text = text
-            binding.statusText.setTextColor(Color.parseColor(textColor))
-            binding.statusBadgeLayout.backgroundTintList = ColorStateList.valueOf(Color.parseColor(bgColor))
+            val color = Color.parseColor(textColor)
+            binding.statusText.setTextColor(color)
+            binding.statusBadgeLayout.setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor(bgColor)))
+            
             if (iconRes != null) {
-                binding.statusIcon.setImageResource(iconRes)
-                binding.statusIcon.visibility = View.VISIBLE
-                binding.statusIcon.imageTintList = ColorStateList.valueOf(Color.parseColor(textColor))
+                val drawable = ContextCompat.getDrawable(binding.statusText.context, iconRes)?.mutate()
+                drawable?.let {
+                    DrawableCompat.setTint(it, color)
+                    binding.statusText.setCompoundDrawablesWithIntrinsicBounds(it, null, null, null)
+                }
             } else {
-                binding.statusIcon.visibility = View.GONE
+                binding.statusText.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
             }
         }
     }

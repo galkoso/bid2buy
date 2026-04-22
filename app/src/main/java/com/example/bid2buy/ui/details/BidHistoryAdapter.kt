@@ -11,7 +11,12 @@ import com.example.bid2buy.model.Bid
 import java.text.SimpleDateFormat
 import java.util.*
 
-class BidHistoryAdapter : ListAdapter<Bid, BidHistoryAdapter.ViewHolder>(DiffCallback()) {
+class BidHistoryAdapter : ListAdapter<BidHistoryAdapter.BidHistoryItem, BidHistoryAdapter.ViewHolder>(DiffCallback()) {
+
+    data class BidHistoryItem(
+        val bid: Bid,
+        val isHighest: Boolean
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemBidHistoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -19,22 +24,28 @@ class BidHistoryAdapter : ListAdapter<Bid, BidHistoryAdapter.ViewHolder>(DiffCal
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position), position == 0)
+        holder.bind(getItem(position))
     }
 
     class ViewHolder(private val binding: ItemBidHistoryBinding) : RecyclerView.ViewHolder(binding.root) {
         private val dateFormat = SimpleDateFormat("M/d/yyyy, h:mm:ss a", Locale.getDefault())
 
-        fun bind(bid: Bid, isHighest: Boolean) {
+        fun bind(item: BidHistoryItem) {
+            val bid = item.bid
             binding.tvBidderName.text = bid.bidderName
             binding.tvAmount.text = "₪${bid.amount.toInt()}"
             binding.tvTimestamp.text = bid.timestamp?.toDate()?.let { dateFormat.format(it) } ?: ""
-            binding.tvHighestLabel.visibility = if (isHighest) View.VISIBLE else View.GONE
+            
+            // Explicitly set visibility to handle view reuse
+            binding.tvHighestLabel.visibility = if (item.isHighest) View.VISIBLE else View.GONE
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<Bid>() {
-        override fun areItemsTheSame(oldItem: Bid, newItem: Bid) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Bid, newItem: Bid) = oldItem == newItem
+    class DiffCallback : DiffUtil.ItemCallback<BidHistoryItem>() {
+        override fun areItemsTheSame(oldItem: BidHistoryItem, newItem: BidHistoryItem) = 
+            oldItem.bid.id == newItem.bid.id
+            
+        override fun areContentsTheSame(oldItem: BidHistoryItem, newItem: BidHistoryItem) = 
+            oldItem == newItem
     }
 }
