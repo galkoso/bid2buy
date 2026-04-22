@@ -30,6 +30,10 @@
         android:name="com.example.bid2buy.ui.bids.BidsFragment"
         android:label="@string/title_bids"
         tools:layout="@layout/fragment_bids">
+        <argument
+            android:name="initialTab"
+            app:argType="integer"
+            android:defaultValue="0" />
         <action
             android:id="@+id/action_navigation_bids_to_listingDetailsFragment"
             app:destination="@+id/listingDetailsFragment" />
@@ -43,6 +47,10 @@
         <action
             android:id="@+id/action_navigation_profile_to_editProfileFragment"
             app:destination="@+id/editProfileFragment" />
+        <action
+            android:id="@+id/action_navigation_profile_to_navigation_bids"
+            app:destination="@id/navigation_bids"
+            app:popUpTo="@id/navigation_home" />
     </fragment>
 
     <fragment

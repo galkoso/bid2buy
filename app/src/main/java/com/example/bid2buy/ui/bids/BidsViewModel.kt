@@ -56,10 +56,14 @@ class BidsViewModel : ViewModel() {
         }
     }
 
-    fun loadBids() {
+    fun loadBids(forceRefresh: Boolean = false) {
         val uid = repository.getCurrentUserUid() ?: return
         
-        _isLoading.value = true
+        // If we already have data and don't force refresh, don't show loading animation
+        if (forceRefresh || lastFetchedListings.isEmpty()) {
+            _isLoading.value = true
+        }
+
         viewModelScope.launch {
             try {
                 val userBids = repository.getBidsForUser(uid)
