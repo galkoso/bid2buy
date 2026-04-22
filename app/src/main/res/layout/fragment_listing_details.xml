@@ -23,7 +23,7 @@
                 android:id="@+id/btnBack"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:contentDescription="Back"
+                android:contentDescription="@string/desc_back_arrow"
                 android:src="@drawable/ic_arrow_back_bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="Item Details"
+                android:text="@string/item_details_title"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -123,7 +123,7 @@
                     android:background="@drawable/bg_status_black"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="4dp"
-                    android:text="Active"
+                    android:text="@string/tab_active"
                     android:textColor="@color/white"
                     android:textSize="11sp"
                     android:textStyle="bold"
@@ -163,6 +163,7 @@
                         android:id="@+id/ivCategoryIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
+                        android:contentDescription="@string/desc_category_icon"
                         android:src="@drawable/ic_tag"
                         app:tint="@color/text_secondary" />
 
@@ -191,6 +192,7 @@
                         android:id="@+id/ivConditionIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
+                        android:contentDescription="@string/desc_condition_icon"
                         android:src="@drawable/ic_condition"
                         app:tint="@color/text_secondary" />
 
@@ -218,6 +220,7 @@
                         android:id="@+id/ivLocationIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
+                        android:contentDescription="@string/desc_location_icon"
                         android:src="@drawable/ic_location_small"
                         app:tint="@color/text_secondary" />
 
@@ -246,6 +249,7 @@
                         android:id="@+id/ivTimerIcon"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
+                        android:contentDescription="@string/desc_timer_icon"
                         android:src="@drawable/ic_timer"
                         app:tint="@color/text_secondary" />
 
@@ -274,26 +278,21 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvBidLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_toStartOf="@id/btnViewBids"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginEnd="16dp"
+                        android:drawablePadding="6dp"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="14dp"
-                            android:layout_height="14dp"
-                            android:src="@drawable/ic_graph_green" />
-
-                        <TextView
-                            android:id="@+id/tvBidLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:text="Current Highest Bid"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
-                    </LinearLayout>
+                        android:text="@string/current_highest_bid"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        app:drawableStartCompat="@drawable/ic_graph_green" />
 
                     <TextView
                         android:id="@+id/btnViewBids"
@@ -302,10 +301,11 @@
                         android:layout_alignParentEnd="true"
                         android:clickable="true"
                         android:focusable="true"
-                        android:text="View 2 bids"
+                        android:text="@string/view_bids_count"
                         android:textColor="#3D70F5"
                         android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        tools:text="View 2 bids" />
                 </RelativeLayout>
 
                 <TextView
@@ -357,7 +357,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Description"
+                        android:text="@string/description_title"
                         android:textColor="@color/black"
                         android:textSize="18sp"
                         android:textStyle="bold" />
@@ -407,7 +407,7 @@
                     android:backgroundTint="#0D1B34"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:text="Place a Bid"
+                    android:text="@string/place_a_bid"
                     android:textAllCaps="false"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -430,7 +430,7 @@
                     android:layout_height="50dp"
                     android:layout_marginEnd="12dp"
                     android:layout_weight="1"
-                    android:text="Edit"
+                    android:text="@string/edit"
                     android:textAllCaps="false"
                     android:textColor="@color/black"
                     android:textSize="16sp"
@@ -455,6 +455,7 @@
                     android:insetRight="0dp"
                     android:insetBottom="0dp"
                     android:padding="0dp"
+                    android:contentDescription="@null"
                     app:elevation="0dp"
                     app:cornerRadius="12dp"
                     app:icon="@drawable/ic_delete"

@@ -65,8 +65,6 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
         // Fix overlap by setting hint on the Layout and clearing it from the EditText
         binding.bidInputLayout.hint = "Amount (Minimum ₪${minBid.toInt()})"
         binding.editBidAmount.hint = null
-        
-        binding.textMinBidHelper.text = "Minimum bid: ₪${minBid.toInt()}"
 
         binding.btnClose.setOnClickListener { dismiss() }
 

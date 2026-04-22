@@ -2,6 +2,7 @@ package com.example.bid2buy.repositories
 
 import com.example.bid2buy.model.Bid
 import com.example.bid2buy.model.Listing
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,7 +30,7 @@ class BidsRepository {
             val listing = snapshot.toObject(Listing::class.java) ?: throw Exception("Listing not found")
 
             // Validation
-            val now = Timestamp.now()
+            val now = TimeUtils.now()
             if (listing.closingAt != null && listing.closingAt.compareTo(now) < 0) {
                 throw Exception("This auction has already closed")
             }
@@ -53,7 +54,7 @@ class BidsRepository {
                 bidderUid = uid,
                 bidderName = displayName,
                 amount = amount,
-                timestamp = Timestamp.now()
+                timestamp = TimeUtils.now()
             )
 
             // Update Listing
@@ -120,7 +121,7 @@ class BidsRepository {
                                 trySend(0)
                                 return@addSnapshotListener
                             }
-                            val now = Timestamp.now()
+                            val now = TimeUtils.now()
                             val listings = listingSnapshot?.toObjects(Listing::class.java) ?: emptyList()
                             val activeCount = listings.count { listing ->
                                 val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
@@ -145,7 +146,7 @@ class BidsRepository {
                     close(error)
                     return@addSnapshotListener
                 }
-                val now = Timestamp.now()
+                val now = TimeUtils.now()
                 val listings = snapshot?.toObjects(Listing::class.java) ?: emptyList()
                 val winsCount = listings.count { listing ->
                     val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.BidsRepository
 import com.example.bid2buy.model.Bid
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,7 +49,7 @@ class BidsViewModel : ViewModel() {
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(1000)
-                _timerPulse.postValue(System.currentTimeMillis())
+                _timerPulse.postValue(TimeUtils.currentTimeMillis())
                 if (lastFetchedListings.isNotEmpty()) {
                     processAndPostBids()
                 }
@@ -89,7 +90,7 @@ class BidsViewModel : ViewModel() {
         val won = mutableListOf<BidItemUiModel>()
         val lost = mutableListOf<BidItemUiModel>()
 
-        val now = Timestamp.now()
+        val now = TimeUtils.now()
 
         lastFetchedListings.forEach { listing ->
             val userMaxBid = lastFetchedUserBids.filter { it.listingId == listing.id }.maxByOrNull { it.amount }?.amount ?: 0.0

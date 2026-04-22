@@ -89,7 +89,7 @@ class BidsFragment : Fragment() {
             // Only show empty state if we're not currently loading data for the first time
             if (viewModel.isLoading.value != true) {
                 binding.emptyState.visibility = View.VISIBLE
-                binding.emptyStateText.text = when (position) {
+                binding.emptyState.text = when (position) {
                     0 -> "You have no active bids"
                     1 -> "You haven't won any auctions yet"
                     2 -> "No lost auctions found"

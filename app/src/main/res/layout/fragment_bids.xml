@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/header_border"
         android:padding="16dp"
-        android:text="My Bids &amp; Wins"
+        android:text="@string/my_bids_and_wins"
         android:textColor="@color/black"
         android:textSize="24sp"
         android:textStyle="bold" />
@@ -49,17 +49,17 @@
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Active" />
+                    android:text="@string/tab_active" />
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Won" />
+                    android:text="@string/tab_won" />
 
                 <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Lost" />
+                    android:text="@string/tab_lost" />
 
             </com.google.android.material.tabs.TabLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -91,34 +91,22 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+        <TextView
             android:id="@+id/emptyState"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            app:drawableTopCompat="@drawable/ic_bids"
+            android:drawablePadding="16dp"
+            app:drawableTint="#4D000000"
             android:gravity="center"
-            android:orientation="vertical"
+            android:text="@string/no_bids_yet"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            android:textColor="#9E9E9E"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <ImageView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:alpha="0.3"
-                android:src="@drawable/ic_bids"
-                app:tint="@color/black" />
-
-            <TextView
-                android:id="@+id/emptyStateText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="No bids yet"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-                android:textColor="#9E9E9E" />
-        </LinearLayout>
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

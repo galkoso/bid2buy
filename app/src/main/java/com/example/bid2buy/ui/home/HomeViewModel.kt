@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
@@ -61,7 +62,7 @@ class HomeViewModel : ViewModel() {
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(1000)
-                _timerPulse.postValue(System.currentTimeMillis())
+                _timerPulse.postValue(TimeUtils.currentTimeMillis())
                 processAndPostListings()
             }
         }
@@ -92,11 +93,11 @@ class HomeViewModel : ViewModel() {
     }
 
     private fun processAndPostListings() {
-        val now = Timestamp.now()
+        val now = TimeUtils.now()
 
         // 1. Filter out expired ones
         var filteredList = lastFetchedListings.filter { 
-            it.closingAt != null && it.closingAt.toDate().time > now.toDate().time 
+            it.closingAt != null && it.closingAt.toDate().time > now.toDate().time
         }
 
         // 2. Search

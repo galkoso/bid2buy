@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bid2buy.databinding.DialogBidHistoryBinding
@@ -75,7 +74,21 @@ class BidHistoryBottomSheetFragment : BottomSheetDialogFragment() {
                     Toast.makeText(context, "Failed to load bid history: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
                 .collectLatest { bids ->
-                    bidHistoryAdapter.submitList(bids)
+                    // Transform Bids into BidHistoryItems with explicit isHighest flag
+                    // Using index == 0 ensures only the top bid (highest amount) gets the label
+                    val uiItems = bids.mapIndexed { index, bid ->
+                        BidHistoryAdapter.BidHistoryItem(
+                            bid = bid,
+                            isHighest = index == 0
+                        )
+                    }
+                    
+                    // Submit the list and scroll to top to ensure the newest highest bid is visible
+                    bidHistoryAdapter.submitList(uiItems) {
+                        if (isAdded) {
+                            binding.rvBids.scrollToPosition(0)
+                        }
+                    }
                 }
         }
     }

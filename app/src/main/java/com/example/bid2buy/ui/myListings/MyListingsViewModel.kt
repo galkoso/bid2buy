@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ListenerRegistration
@@ -61,7 +62,7 @@ class MyListingsViewModel : ViewModel() {
     }
 
     private fun updateCountsAndListings(allListings: List<Listing>) {
-        val now = Timestamp.now()
+        val now = TimeUtils.now()
         val active = allListings.filter { it.closingAt != null && it.closingAt.toDate().time > now.toDate().time }
         val closed = allListings.filter { it.closingAt == null || it.closingAt.toDate().time <= now.toDate().time }
         
@@ -75,7 +76,7 @@ class MyListingsViewModel : ViewModel() {
         refreshJob = viewModelScope.launch {
             while (true) {
                 delay(60000) // Refresh timer every minute
-                _timerPulse.postValue(System.currentTimeMillis())
+                _timerPulse.postValue(TimeUtils.currentTimeMillis())
                 _listings.value?.let { currentList ->
                     updateCountsAndListings(currentList)
                 }
