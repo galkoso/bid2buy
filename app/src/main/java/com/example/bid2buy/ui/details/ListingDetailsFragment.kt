@@ -75,7 +75,9 @@ class ListingDetailsFragment : Fragment() {
         }
 
         binding.btnViewBids.setOnClickListener {
-            // Future implementation: show bid history
+            val listingId = viewModel.listing.value?.id ?: return@setOnClickListener
+            val bottomSheet = BidHistoryBottomSheetFragment.newInstance(listingId)
+            bottomSheet.show(parentFragmentManager, BidHistoryBottomSheetFragment.TAG)
         }
     }
 
