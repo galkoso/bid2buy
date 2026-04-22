@@ -79,6 +79,21 @@ class BidsRepository {
             .toObjects(Bid::class.java)
     }
 
+    fun observeBidsForListing(listingId: String): Flow<List<Bid>> = callbackFlow {
+        val listener = firestore.collection("bids")
+            .whereEqualTo("listingId", listingId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val bids = snapshot?.toObjects(Bid::class.java) ?: emptyList()
+                // Sort in memory to avoid potential missing index errors or generic permission denials
+                trySend(bids.sortedByDescending { it.amount })
+            }
+        awaitClose { listener.remove() }
+    }
+
     fun observeActiveBidsCount(uid: String): Flow<Int> = callbackFlow {
         var listingListener: ListenerRegistration? = null
         
