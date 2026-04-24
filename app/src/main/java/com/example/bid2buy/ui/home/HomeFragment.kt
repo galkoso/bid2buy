@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.DialogFilterBinding
 import com.example.bid2buy.databinding.FragmentHomeBinding
@@ -53,8 +54,25 @@ class HomeFragment : Fragment() {
             val action = HomeFragmentDirections.actionNavigationHomeToListingDetailsFragment(listing.id)
             findNavController().navigate(action)
         }
-        binding.rvBrowse.layoutManager = LinearLayoutManager(context)
+        val layoutManager = LinearLayoutManager(context)
+        binding.rvBrowse.layoutManager = layoutManager
         binding.rvBrowse.adapter = adapter
+
+        binding.rvBrowse.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                
+                if (dy > 0) { // scrolling down
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val pastVisibleItems = layoutManager.findFirstVisibleItemPosition()
+
+                    if ((visibleItemCount + pastVisibleItems) >= totalItemCount) {
+                        homeViewModel.loadMore()
+                    }
+                }
+            }
+        })
     }
 
     private fun setupSwipeRefresh() {
@@ -158,9 +176,7 @@ class HomeFragment : Fragment() {
 
     private fun observeViewModel() {
         homeViewModel.listings.observe(viewLifecycleOwner) { listings ->
-            adapter.submitList(listings) {
-                adapter.notifyDataSetChanged()
-            }
+            adapter.submitList(listings)
             binding.tvItemCount.text = "${listings.size} items"
             binding.swipeRefresh.isRefreshing = false
         }
@@ -169,6 +185,10 @@ class HomeFragment : Fragment() {
             if (!binding.swipeRefresh.isRefreshing) {
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
+        }
+
+        homeViewModel.isPaginating.observe(viewLifecycleOwner) { isPaginating ->
+            // In a real app, you might show a small footer loader here
         }
     }
 

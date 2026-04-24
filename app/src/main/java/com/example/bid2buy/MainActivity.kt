@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.bid2buy.databinding.ActivityMainBinding
+import com.example.bid2buy.repositories.ListingsRepository
 import com.example.bid2buy.util.NetworkUtils
 import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
@@ -23,9 +24,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Sync time with server to prevent local clock manipulation
+        // Sync time with server and perform maintenance
         lifecycleScope.launch {
             TimeUtils.syncTime()
+            // Automatic cleanup of listings closed for more than a year
+            ListingsRepository().cleanupOldListings()
         }
 
         val navHostFragment = supportFragmentManager

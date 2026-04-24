@@ -14,6 +14,8 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.util.Calendar
+import java.util.Date
 
 class ListingsRepository {
 
@@ -89,20 +91,62 @@ class ListingsRepository {
     }
 
     suspend fun deleteListing(listingId: String) {
-        val uid = auth.currentUser?.uid ?: return
+        val doc = firestore.collection("listings").document(listingId).get().await()
+        val createdByUid = doc.getString("createdByUid") ?: return
         
+        // 1. Delete associated images from Firebase Storage
         try {
             val storageRef = storage.reference
                 .child("listing_photos")
-                .child(uid)
+                .child(createdByUid)
                 .child(listingId)
             
             val listResult = storageRef.listAll().await()
             listResult.items.forEach { it.delete().await() }
         } catch (e: Exception) {
+            // Photos might not exist or storage path might differ
         }
 
+        // 2. Delete all bids associated with this listing
+        try {
+            val bidsQuery = firestore.collection("bids")
+                .whereEqualTo("listingId", listingId)
+                .get()
+                .await()
+            
+            val batch = firestore.batch()
+            for (bidDoc in bidsQuery.documents) {
+                batch.delete(bidDoc.reference)
+            }
+            batch.commit().await()
+        } catch (e: Exception) {
+            // Error deleting bids
+        }
+
+        // 3. Finally, delete the listing document itself
         firestore.collection("listings").document(listingId).delete().await()
+    }
+
+    /**
+     * Removes listings that closed more than 1 year ago.
+     */
+    suspend fun cleanupOldListings() {
+        try {
+            val oneYearAgo = Calendar.getInstance().apply {
+                timeInMillis = TimeUtils.currentTimeMillis()
+                add(Calendar.YEAR, -1)
+            }.time
+
+            val oldListingsQuery = firestore.collection("listings")
+                .whereLessThan("closingAt", Timestamp(oneYearAgo))
+                .get()
+                .await()
+
+            for (document in oldListingsQuery.documents) {
+                deleteListing(document.id)
+            }
+        } catch (e: Exception) {
+        }
     }
 
     fun getCurrentUserUid(): String? = auth.currentUser?.uid

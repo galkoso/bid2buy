@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
 import com.example.bid2buy.util.TimeUtils
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Job
@@ -31,7 +30,6 @@ class MyListingsViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
-    // Used to trigger UI refreshes for the timer without data changes
     private val _timerPulse = MutableLiveData<Long>()
     val timerPulse: LiveData<Long> = _timerPulse
 
