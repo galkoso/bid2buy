@@ -15,6 +15,7 @@ import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentListingDetailsBinding
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.ui.bid.PlaceBidBottomSheetFragment
+import com.example.bid2buy.util.NetworkUtils
 import com.google.android.material.tabs.TabLayoutMediator
 
 class ListingDetailsFragment : Fragment() {
@@ -54,6 +55,10 @@ class ListingDetailsFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnPlaceBid.setOnClickListener {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to place a bid.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val listing = viewModel.listing.value ?: return@setOnClickListener
             val bottomSheet = PlaceBidBottomSheetFragment.newInstance(
                 listingId = listing.id,
@@ -65,16 +70,28 @@ class ListingDetailsFragment : Fragment() {
         }
 
         binding.btnEdit.setOnClickListener {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to edit your listing.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val action = ListingDetailsFragmentDirections.actionListingDetailsFragmentToEditListingFragment(args.listingId)
             findNavController().navigate(action)
         }
 
         binding.btnDelete.setOnClickListener {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to delete your listing.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             viewModel.deleteListing()
             findNavController().navigateUp()
         }
 
         binding.btnViewBids.setOnClickListener {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to view bid history.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val listingId = viewModel.listing.value?.id ?: return@setOnClickListener
             val bottomSheet = BidHistoryBottomSheetFragment.newInstance(listingId)
             bottomSheet.show(parentFragmentManager, BidHistoryBottomSheetFragment.TAG)

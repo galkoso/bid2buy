@@ -2,13 +2,15 @@ package com.example.bid2buy
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.bid2buy.databinding.ActivityMainBinding
-import com.google.firebase.auth.FirebaseAuth
+import com.example.bid2buy.util.NetworkUtils
 import com.example.bid2buy.util.TimeUtils
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -40,22 +42,21 @@ class MainActivity : AppCompatActivity() {
             binding.fabAdd.setOnClickListener(null)
             binding.fabAdd.isClickable = false
 
-            // Disable restricted menu items (they usually look faded when disabled)
+            // Disable restricted menu items
             val menu = binding.navView.menu
             menu.findItem(R.id.navigation_listings).isEnabled = false
             menu.findItem(R.id.navigation_bids).isEnabled = false
-            
-            // Set alpha on the internal views of the navigation for a more pronounced faded effect
-            // Note: BottomNavigationView doesn't have a simple setAlpha for items, 
-            // but isEnabled=false usually does the trick with standard color selectors.
         } else {
             binding.fabAdd.setOnClickListener {
-                navController.navigate(R.id.navigation_add)
+                if (!NetworkUtils.isNetworkAvailable(this)) {
+                    Toast.makeText(this, "No internet connection. Please connect to the internet to add a new listing.", Toast.LENGTH_SHORT).show()
+                } else {
+                    navController.navigate(R.id.navigation_add)
+                }
             }
         }
 
         binding.navView.setOnItemSelectedListener { item ->
-            // If it's enabled, navigate. If disabled, isEnabled=false handles it.
             if (item.isEnabled) {
                 if (navController.currentDestination?.id != item.itemId) {
                     navController.navigate(item.itemId)

@@ -1,10 +1,13 @@
 package com.example.bid2buy.ui.profile
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.UserProfile
 import com.example.bid2buy.repositories.BidsRepository
 import com.example.bid2buy.repositories.FirestoreUserRepository
+import com.example.bid2buy.repositories.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,11 +15,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class ProfileViewModel(
-    private val repository: FirestoreUserRepository = FirestoreUserRepository(),
-    private val bidsRepository: BidsRepository = BidsRepository(),
+class ProfileViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val database = AppDatabase.getDatabase(application)
+    private val firestoreUserRepository = FirestoreUserRepository()
+    private val repository = UserRepository(firestoreUserRepository, database.userDao())
+    private val bidsRepository = BidsRepository()
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-) : ViewModel() {
 
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
@@ -37,36 +42,39 @@ class ProfileViewModel(
     val winsCount: StateFlow<Int> = _winsCount.asStateFlow()
 
     init {
-        loadUserProfile()
-        loadActiveListingsCount()
-        loadActiveBidsCount()
-        loadWinsCount()
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            observeProfile(uid)
+            refreshProfile(uid)
+            loadActiveListingsCount(uid)
+            loadActiveBidsCount(uid)
+            loadWinsCount(uid)
+        } else {
+            _errorMessage.value = "User not authenticated"
+        }
     }
 
-    private fun loadUserProfile() {
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
-            _errorMessage.value = "User not authenticated"
-            return
-        }
-
+    private fun observeProfile(uid: String) {
         viewModelScope.launch {
-            try {
-                repository.observeUser(uid).collectLatest { profile ->
+            repository.observeUserProfile(uid).collectLatest { profile ->
+                if (profile != null) {
                     _userProfile.value = profile
-                    _successRate.value = profile?.successRate ?: 0
+                    _successRate.value = profile.successRate
                 }
-            } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "An error occurred"
             }
         }
     }
 
-    private fun loadActiveListingsCount() {
-        val uid = auth.currentUser?.uid ?: return
+    private fun refreshProfile(uid: String) {
+        viewModelScope.launch {
+            repository.refreshUserProfile(uid)
+        }
+    }
+
+    private fun loadActiveListingsCount(uid: String) {
         viewModelScope.launch {
             try {
-                repository.observeActiveListingsCount(uid).collectLatest { count ->
+                firestoreUserRepository.observeActiveListingsCount(uid).collectLatest { count ->
                     _activeListingsCount.value = count
                 }
             } catch (e: Exception) {
@@ -75,8 +83,7 @@ class ProfileViewModel(
         }
     }
 
-    private fun loadActiveBidsCount() {
-        val uid = auth.currentUser?.uid ?: return
+    private fun loadActiveBidsCount(uid: String) {
         viewModelScope.launch {
             try {
                 bidsRepository.observeActiveBidsCount(uid).collectLatest { count ->
@@ -88,8 +95,7 @@ class ProfileViewModel(
         }
     }
 
-    private fun loadWinsCount() {
-        val uid = auth.currentUser?.uid ?: return
+    private fun loadWinsCount(uid: String) {
         viewModelScope.launch {
             try {
                 bidsRepository.observeWinsCount(uid).collectLatest { count ->
