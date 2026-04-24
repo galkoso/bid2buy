@@ -102,6 +102,7 @@
     <string name="save_changes">Save Changes</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
+    <string name="cover_label">Cover</string>
 
     <!-- Content Descriptions -->
     <string name="desc_profile_image">Profile Image</string>
@@ -127,6 +128,8 @@
     <string name="desc_timer_icon">Timer Icon</string>
     <string name="desc_delete_icon">Delete Icon</string>
     <string name="desc_avatar">Bidder Avatar</string>
+    <string name="desc_remove_photo">Remove Photo</string>
+    <string name="desc_listing_photo">Listing Photo</string>
 
     <!-- Home Fragment Strings -->
     <string name="browse_auctions">Browse Auctions</string>
