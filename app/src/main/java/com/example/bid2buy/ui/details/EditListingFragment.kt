@@ -3,6 +3,7 @@ package com.example.bid2buy.ui.details
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,13 +12,16 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.CheckedTextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentEditListingBinding
+import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
 import com.google.firebase.Timestamp
@@ -35,6 +39,25 @@ class EditListingFragment : Fragment() {
     private val repository = ListingsRepository()
 
     private var selectedDateTime: Calendar = Calendar.getInstance()
+    
+    // Track photos
+    private val currentPhotos = mutableListOf<PhotoItem>()
+    
+    private sealed class PhotoItem {
+        data class Remote(val url: String) : PhotoItem()
+        data class Local(val uri: Uri) : PhotoItem()
+    }
+
+    private val getImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            if (currentPhotos.size < 10) {
+                currentPhotos.add(PhotoItem.Local(it))
+                renderPhotos()
+            } else {
+                Toast.makeText(requireContext(), "Maximum 10 photos allowed", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,6 +75,7 @@ class EditListingFragment : Fragment() {
         setupDropdowns()
         setupPriceControls()
         setupDateTimePickers()
+        setupPhotoActions()
         observeViewModel()
         
         viewModel.loadListing(args.listingId)
@@ -69,6 +93,47 @@ class EditListingFragment : Fragment() {
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
+    }
+
+    private fun setupPhotoActions() {
+        binding.photoUploadContainer.setOnClickListener {
+            if (currentPhotos.size < 10) {
+                getImage.launch("image/*")
+            } else {
+                Toast.makeText(requireContext(), "Maximum 10 photos reached", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun renderPhotos() {
+        binding.photoPreviewsContainer.removeAllViews()
+        currentPhotos.forEachIndexed { index, photoItem ->
+            val previewBinding = ItemPhotoPreviewBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.photoPreviewsContainer,
+                false
+            )
+            
+            val imageView = previewBinding.ivPhoto
+            when (photoItem) {
+                is PhotoItem.Remote -> Glide.with(this).load(photoItem.url).centerCrop().into(imageView)
+                is PhotoItem.Local -> Glide.with(this).load(photoItem.uri).centerCrop().into(imageView)
+            }
+            
+            previewBinding.tvCoverBadge.visibility = if (index == 0) View.VISIBLE else View.GONE
+            
+            previewBinding.btnDelete.setOnClickListener {
+                currentPhotos.removeAt(index)
+                renderPhotos()
+            }
+            
+            binding.photoPreviewsContainer.addView(previewBinding.root)
+        }
+        updatePhotoCount()
+    }
+
+    private fun updatePhotoCount() {
+        binding.tvPhotoCount.text = getString(R.string.photo_count_initial).replace("0 / 10", "${currentPhotos.size} / 10")
     }
 
     private fun setupDropdowns() {
@@ -172,6 +237,12 @@ class EditListingFragment : Fragment() {
             updateTimeDisplay()
         }
 
+        // Populate photos only if not already populated (to avoid overwriting user changes during recomposition/updates)
+        if (currentPhotos.isEmpty()) {
+            currentPhotos.addAll(listing.photoUrls.map { PhotoItem.Remote(it) })
+            renderPhotos()
+        }
+
         val isEditable = !hasBids
         binding.tilCategory.isEnabled = isEditable
         binding.tilCondition.isEnabled = isEditable
@@ -206,30 +277,65 @@ class EditListingFragment : Fragment() {
             Toast.makeText(requireContext(), "Please fill all required fields", Toast.LENGTH_SHORT).show()
             return
         }
-
-        val updates = mutableMapOf<String, Any>(
-            "title" to title,
-            "description" to description,
-            "location" to location
-        )
-
-        val listing = viewModel.listing.value ?: return
-        if (listing.bidCount == 0) {
-            val category = binding.autoCategory.text.toString()
-            val condition = binding.autoCondition.text.toString()
-            val price = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
-            val closingAt = Timestamp(selectedDateTime.time)
-
-            updates["category"] = category
-            updates["condition"] = condition
-            updates["startingPrice"] = price
-            updates["closingAt"] = closingAt
+        
+        if (currentPhotos.isEmpty()) {
+            Toast.makeText(requireContext(), "Please add at least one photo", Toast.LENGTH_SHORT).show()
+            return
         }
 
+        val listing = viewModel.listing.value ?: return
+        
         lifecycleScope.launch {
             try {
                 binding.btnSave.isEnabled = false
                 binding.btnSave.text = "Saving..."
+
+                // 1. Separate new photos from existing ones
+                val existingUrls = currentPhotos.filterIsInstance<PhotoItem.Remote>().map { it.url }
+                val newUris = currentPhotos.filterIsInstance<PhotoItem.Local>().map { it.uri }
+
+                // 2. Upload new photos if any
+                val uploadedUrls = if (newUris.isNotEmpty()) {
+                    repository.uploadImages(newUris, listing.id)
+                } else {
+                    emptyList()
+                }
+
+                // 3. Combine URLs (maintaining order)
+                val finalPhotoUrls = mutableListOf<String>()
+                currentPhotos.forEach { photo ->
+                    when (photo) {
+                        is PhotoItem.Remote -> finalPhotoUrls.add(photo.url)
+                        is PhotoItem.Local -> {
+                            // Find corresponding uploaded URL. 
+                            // This depends on maintaining order in uploadImages.
+                            val newIndex = newUris.indexOf(photo.uri)
+                            if (newIndex != -1) {
+                                finalPhotoUrls.add(uploadedUrls[newIndex])
+                            }
+                        }
+                    }
+                }
+
+                val updates = mutableMapOf<String, Any>(
+                    "title" to title,
+                    "description" to description,
+                    "location" to location,
+                    "photoUrls" to finalPhotoUrls
+                )
+
+                if (listing.bidCount == 0) {
+                    val category = binding.autoCategory.text.toString()
+                    val condition = binding.autoCondition.text.toString()
+                    val price = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
+                    val closingAt = Timestamp(selectedDateTime.time)
+
+                    updates["category"] = category
+                    updates["condition"] = condition
+                    updates["startingPrice"] = price
+                    updates["closingAt"] = closingAt
+                }
+
                 repository.updateListing(listing.id, updates)
                 Toast.makeText(requireContext(), "Changes saved successfully", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()

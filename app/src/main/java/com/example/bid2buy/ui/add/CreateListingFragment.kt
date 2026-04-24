@@ -19,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentCreateListingBinding
 import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
@@ -46,30 +47,37 @@ class CreateListingFragment : Fragment() {
         uri?.let {
             if (selectedImageUris.size < 10) {
                 selectedImageUris.add(it)
-                addPhotoToPreview(it)
-                updatePhotoCount()
+                renderPhotos()
             } else {
                 Toast.makeText(requireContext(), "Maximum 10 photos allowed", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun addPhotoToPreview(uri: Uri) {
-        val previewBinding = ItemPhotoPreviewBinding.inflate(
-            LayoutInflater.from(requireContext()),
-            binding.photoPreviewsContainer,
-            false
-        )
-        previewBinding.ivPhoto.setImageURI(uri)
-        
-        previewBinding.ivPhoto.setOnLongClickListener {
-            selectedImageUris.remove(uri)
-            binding.photoPreviewsContainer.removeView(previewBinding.root)
-            updatePhotoCount()
-            true
+    private fun renderPhotos() {
+        binding.photoPreviewsContainer.removeAllViews()
+        selectedImageUris.forEachIndexed { index, uri ->
+            val previewBinding = ItemPhotoPreviewBinding.inflate(
+                LayoutInflater.from(requireContext()),
+                binding.photoPreviewsContainer,
+                false
+            )
+            
+            Glide.with(this)
+                .load(uri)
+                .centerCrop()
+                .into(previewBinding.ivPhoto)
+            
+            previewBinding.tvCoverBadge.visibility = if (index == 0) View.VISIBLE else View.GONE
+            
+            previewBinding.btnDelete.setOnClickListener {
+                selectedImageUris.remove(uri)
+                renderPhotos()
+            }
+            
+            binding.photoPreviewsContainer.addView(previewBinding.root)
         }
-        
-        binding.photoPreviewsContainer.addView(previewBinding.root)
+        updatePhotoCount()
     }
 
     private fun updatePhotoCount() {

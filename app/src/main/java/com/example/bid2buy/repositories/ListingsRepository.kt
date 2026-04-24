@@ -62,7 +62,12 @@ class ListingsRepository {
             }
 
             if (currentListing.bidCount > 0) {
-                throw Exception("Bidding has already started on this item")
+                // If there are bids, only allow specific fields
+                val allowedKeys = setOf("title", "description", "location", "photoUrls")
+                val illegalKeys = updates.keys.filter { it !in allowedKeys }
+                if (illegalKeys.isNotEmpty()) {
+                    throw Exception("Bidding has started. Cannot update: ${illegalKeys.joinToString()}")
+                }
             }
 
             transaction.update(docRef, updates)
