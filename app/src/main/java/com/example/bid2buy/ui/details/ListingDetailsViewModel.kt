@@ -30,6 +30,9 @@ class ListingDetailsViewModel : ViewModel() {
     private val _isOwner = MutableLiveData<Boolean>(false)
     val isOwner: LiveData<Boolean> = _isOwner
 
+    private val _isSignedIn = MutableLiveData<Boolean>(false)
+    val isSignedIn: LiveData<Boolean> = _isSignedIn
+
     private val _canEdit = MutableLiveData<Boolean>(false)
     val canEdit: LiveData<Boolean> = _canEdit
 
@@ -94,7 +97,9 @@ class ListingDetailsViewModel : ViewModel() {
 
     private fun updatePermissions(listing: Listing) {
         val currentUserUid = repository.getCurrentUserUid()
-        val owner = currentUserUid == listing.createdByUid
+        val isGuest = currentUserUid == null
+        _isSignedIn.value = !isGuest
+        val owner = !isGuest && currentUserUid == listing.createdByUid
         _isOwner.value = owner
 
         val now = TimeUtils.now()
@@ -106,7 +111,7 @@ class ListingDetailsViewModel : ViewModel() {
 
         _canDelete.value = owner && listing.bidCount == 0
 
-        _canBid.value = !owner && !closed
+        _canBid.value = !isGuest && !owner && !closed
     }
 
     fun deleteListing() {

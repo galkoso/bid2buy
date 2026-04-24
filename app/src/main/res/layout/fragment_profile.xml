@@ -438,7 +438,6 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
                             android:orientation="horizontal">
 
                             <TextView
@@ -454,25 +453,6 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/zero_percent"
-                                android:textColor="@color/black" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/response_time"
-                                android:textColor="@color/text_secondary" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/less_than_2_hours"
                                 android:textColor="@color/black" />
                         </LinearLayout>
                     </LinearLayout>

@@ -19,6 +19,7 @@ import com.example.bid2buy.WelcomeActivity
 import com.example.bid2buy.databinding.FragmentProfileBinding
 import com.example.bid2buy.model.UserProfile
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -42,8 +43,54 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupObservers()
-        setupListeners()
+        val isGuest = FirebaseAuth.getInstance().currentUser == null
+        if (isGuest) {
+            setupGuestUI()
+        } else {
+            setupObservers()
+            setupListeners()
+        }
+    }
+
+    private fun setupGuestUI() {
+        hideShimmer()
+        binding.userName.text = "Guest User"
+        binding.userEmail.text = "Login to see your profile"
+        binding.userInitials.text = "GU"
+        binding.userInitials.visibility = View.VISIBLE
+        binding.profileImage.visibility = View.GONE
+
+        // Gray out elements and disable clicks
+        val grayAlpha = 0.5f
+        
+        binding.editProfileBtn.isEnabled = false
+        binding.editProfileBtn.alpha = grayAlpha
+        
+        binding.activeListingsCard.isEnabled = false
+        binding.activeListingsCard.alpha = grayAlpha
+        
+        binding.activeBidsCard.isEnabled = false
+        binding.activeBidsCard.alpha = grayAlpha
+        
+        binding.winsCard.isEnabled = false
+        binding.winsCard.alpha = grayAlpha
+        
+        binding.myListingsSection.isEnabled = false
+        binding.myListingsSection.alpha = grayAlpha
+        
+        binding.myBidsSection.isEnabled = false
+        binding.myBidsSection.alpha = grayAlpha
+
+        // Account Activity section
+        binding.memberSince.text = "N/A"
+        binding.totalItemsSold.text = "0"
+        binding.successRate.text = "0%"
+        
+        // Gray out the parent containers if needed, or individual items
+        // For simplicity, let's just make the logout section work
+        binding.logoutSection.setOnClickListener {
+            handleLogout()
+        }
     }
 
     private fun setupObservers() {
@@ -85,7 +132,9 @@ class ProfileFragment : Fragment() {
                 launch {
                     viewModel.errorMessage.collectLatest { message ->
                         message?.let {
-                            Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                            if (FirebaseAuth.getInstance().currentUser != null) {
+                                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                            }
                             viewModel.clearError()
                             hideShimmer()
                         }
@@ -139,12 +188,7 @@ class ProfileFragment : Fragment() {
 
     private fun setupListeners() {
         binding.logoutSection.setOnClickListener {
-            authRepository.logout()
-            val intent = Intent(requireContext(), WelcomeActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            startActivity(intent)
-            requireActivity().finish()
+            handleLogout()
         }
 
         binding.editProfileBtn.setOnClickListener {
@@ -170,6 +214,15 @@ class ProfileFragment : Fragment() {
         binding.myBidsSection.setOnClickListener {
             navigateToBids(0)
         }
+    }
+
+    private fun handleLogout() {
+        authRepository.logout()
+        val intent = Intent(requireContext(), WelcomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        requireActivity().finish()
     }
 
     private fun navigateToMyListings() {
