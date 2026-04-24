@@ -45,7 +45,6 @@ class MyListingsFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        viewModel.stopListening()
         viewModel.stopAutoRefresh()
     }
 
@@ -77,7 +76,6 @@ class MyListingsFragment : Fragment() {
 
         viewModel.timerPulse.observe(viewLifecycleOwner) {
             updateList()
-            adapter.notifyDataSetChanged()
         }
     }
 

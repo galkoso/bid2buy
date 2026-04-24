@@ -9,6 +9,7 @@ import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.TimeUtils
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,12 +28,22 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableLiveData<Boolean>(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
+    private val _isPaginating = MutableLiveData<Boolean>(false)
+    val isPaginating: LiveData<Boolean> = _isPaginating
+
     private val _timerPulse = MutableLiveData<Long>()
     val timerPulse: LiveData<Long> = _timerPulse
 
     private var lastFetchedListings: List<Listing> = emptyList()
     private var timerJob: Job? = null
     private var observationJob: Job? = null
+    
+    private var lastVisibleDocument: DocumentSnapshot? = null
+    private var canLoadMore = true
+    
+    // Pagination settings for local display
+    private var displayedItemsLimit = 20
+    private val PAGE_SIZE = 20
 
     private var currentCategory: String? = null
     private var currentCondition: String? = null
@@ -41,7 +52,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         startListening()
-        refresh() // Fetch fresh data once on init
+        refresh()
     }
 
     fun startListening() {
@@ -69,10 +80,39 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refresh() {
+        displayedItemsLimit = PAGE_SIZE // Reset display limit on refresh
         viewModelScope.launch {
             _isLoading.value = true
-            repository.refreshActiveListings()
+            lastVisibleDocument = repository.refreshActiveListings()
+            canLoadMore = lastVisibleDocument != null
             _isLoading.value = false
+        }
+    }
+
+    fun loadMore() {
+        if (_isPaginating.value == true) return
+
+        // 1. Logic for gradual display of ALREADY cached items (works offline)
+        val filteredCount = getFilteredList().size
+        if (displayedItemsLimit < filteredCount) {
+            displayedItemsLimit += PAGE_SIZE
+            processAndPostListings()
+            // If we still have more cached items to show, we don't necessarily need to hit the network yet
+            if (displayedItemsLimit <= filteredCount) return 
+        }
+
+        // 2. Logic for fetching NEW items from network (works online)
+        if (!canLoadMore || currentSearchQuery != null || currentCategory != null || currentCondition != null || currentPriceRange != null) return
+
+        viewModelScope.launch {
+            _isPaginating.value = true
+            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument)
+            if (lastDoc != null) {
+                lastVisibleDocument = lastDoc
+            } else {
+                canLoadMore = false
+            }
+            _isPaginating.value = false
         }
     }
 
@@ -80,11 +120,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         currentCategory = if (category == "All Categories" || category.isNullOrBlank()) null else category
         currentCondition = if (condition == "All Conditions" || condition.isNullOrBlank()) null else condition
         currentPriceRange = if (priceRange == "All Prices" || priceRange.isNullOrBlank()) null else priceRange
+        displayedItemsLimit = PAGE_SIZE // Reset limit when filters change
         processAndPostListings()
     }
 
     fun setSearchQuery(query: String?) {
         currentSearchQuery = if (query.isNullOrBlank()) null else query
+        displayedItemsLimit = PAGE_SIZE // Reset limit when search changes
         processAndPostListings()
     }
 
@@ -92,10 +134,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         currentCategory = null
         currentCondition = null
         currentPriceRange = null
+        displayedItemsLimit = PAGE_SIZE
         processAndPostListings()
     }
 
-    private fun processAndPostListings() {
+    private fun getFilteredList(): List<Listing> {
         val now = TimeUtils.now()
 
         var filteredList = lastFetchedListings.filter { 
@@ -128,11 +171,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        val sortedList = filteredList.sortedBy { it.closingAt }
+        return filteredList.sortedBy { it.closingAt }
+    }
+
+    private fun processAndPostListings() {
+        val sortedList = getFilteredList()
         
-        // Only update if the list content has actually changed (or first load)
-        if (_listings.value != sortedList) {
-            _listings.postValue(sortedList)
+        // Apply the display limit for gradual loading (Online & Offline)
+        val limitedList = sortedList.take(displayedItemsLimit)
+        
+        if (_listings.value != limitedList) {
+            _listings.postValue(limitedList)
         }
     }
 
