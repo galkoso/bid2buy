@@ -158,6 +158,20 @@ class BidsRepository {
         awaitClose { listener.remove() }
     }
 
+    fun observeTotalBidsCount(uid: String): Flow<Int> = callbackFlow {
+        val listener = firestore.collection("bids")
+            .whereEqualTo("bidderUid", uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val count = snapshot?.size() ?: 0
+                trySend(count)
+            }
+        awaitClose { listener.remove() }
+    }
+
     suspend fun getListingsByIds(listingIds: List<String>): List<Listing> {
         if (listingIds.isEmpty()) return emptyList()
         return listingIds.chunked(10).flatMap { chunk ->
