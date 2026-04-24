@@ -69,13 +69,14 @@ class ListingsRepository {
     }
 
     fun getListing(listingId: String): Flow<Listing?> = callbackFlow {
-        val subscription = firestore.collection("listings").document(listingId)
+        val subscription = firestore.collection("listings")
+            .whereEqualTo("id", listingId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
                 }
-                val listing = snapshot?.toObject(Listing::class.java)
+                val listing = snapshot?.toObjects(Listing::class.java)?.firstOrNull()
                 trySend(listing)
             }
         awaitClose { subscription.remove() }

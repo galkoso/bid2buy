@@ -1,10 +1,12 @@
 package com.example.bid2buy
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.bid2buy.databinding.ActivityMainBinding
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,19 +24,44 @@ class MainActivity : AppCompatActivity() {
 
         binding.navView.setupWithNavController(navController)
 
-        // Prevent re-navigating to Bids (and resetting the tab) if already there
-        binding.navView.setOnItemReselectedListener { item ->
-            if (item.itemId == R.id.navigation_bids && navController.currentDestination?.id == R.id.navigation_bids) {
-                // Do nothing to keep current tab state
-                return@setOnItemReselectedListener
-            }
+        val isGuest = FirebaseAuth.getInstance().currentUser == null
+
+        if (isGuest) {
+            // Faded out and disable FAB
+            binding.fabAdd.alpha = 0.5f
+            binding.fabAdd.setOnClickListener(null)
+            binding.fabAdd.isClickable = false
+
+            // Disable restricted menu items (they usually look faded when disabled)
+            val menu = binding.navView.menu
+            menu.findItem(R.id.navigation_listings).isEnabled = false
+            menu.findItem(R.id.navigation_bids).isEnabled = false
             
-            // For other items, you can either do nothing or implement scroll to top
-            // Default behavior for reselection in NavigationUI is often to pop to the root of the tab
+            // Set alpha on the internal views of the navigation for a more pronounced faded effect
+            // Note: BottomNavigationView doesn't have a simple setAlpha for items, 
+            // but isEnabled=false usually does the trick with standard color selectors.
+        } else {
+            binding.fabAdd.setOnClickListener {
+                navController.navigate(R.id.navigation_add)
+            }
         }
 
-        binding.fabAdd.setOnClickListener {
-            navController.navigate(R.id.navigation_add)
+        binding.navView.setOnItemSelectedListener { item ->
+            // If it's enabled, navigate. If disabled, isEnabled=false handles it.
+            if (item.isEnabled) {
+                if (navController.currentDestination?.id != item.itemId) {
+                    navController.navigate(item.itemId)
+                }
+                true
+            } else {
+                false
+            }
+        }
+
+        binding.navView.setOnItemReselectedListener { item ->
+            if (item.itemId == R.id.navigation_bids && navController.currentDestination?.id == R.id.navigation_bids) {
+                return@setOnItemReselectedListener
+            }
         }
 
         navController.addOnDestinationChangedListener { _, destination, _ ->

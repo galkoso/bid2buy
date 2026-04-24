@@ -94,6 +94,11 @@ class ListingDetailsFragment : Fragment() {
             listing?.let { bindListingData(it) }
         }
 
+        viewModel.isSignedIn.observe(viewLifecycleOwner) { isSignedIn ->
+            binding.btnViewBids.isEnabled = isSignedIn
+            binding.btnViewBids.alpha = if (isSignedIn) 1.0f else 0.5f
+        }
+
         viewModel.isOwner.observe(viewLifecycleOwner) { isOwner ->
             binding.llSellerActions.visibility = if (isOwner) View.VISIBLE else View.GONE
             binding.llBuyerActions.visibility = if (isOwner) View.GONE else View.VISIBLE
