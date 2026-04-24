@@ -1,16 +1,21 @@
 package com.example.bid2buy.ui.profile
 
+import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.UserProfile
 import com.example.bid2buy.repositories.FirestoreUserRepository
+import com.example.bid2buy.repositories.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class EditProfileViewModel : ViewModel() {
-    private val repository = FirestoreUserRepository()
+class EditProfileViewModel(application: Application) : AndroidViewModel(application) {
+    private val database = AppDatabase.getDatabase(application)
+    private val firestoreUserRepository = FirestoreUserRepository()
+    private val repository = UserRepository(firestoreUserRepository, database.userDao())
     private val auth = FirebaseAuth.getInstance()
     private val uid = auth.currentUser?.uid ?: ""
 
@@ -36,8 +41,9 @@ class EditProfileViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val profile = repository.refreshUser(uid)
-                _userProfile.value = profile
+                repository.observeUserProfile(uid).take(1).collect { profile ->
+                    _userProfile.value = profile
+                }
             } catch (e: Exception) {
                 _errorMessage.emit(e.message ?: "Failed to load profile")
             } finally {
@@ -65,7 +71,7 @@ class EditProfileViewModel : ViewModel() {
                 
                 var photoURL: String? = null
                 if (imageUri != null) {
-                    photoURL = repository.uploadProfileImage(uid, imageUri)
+                    photoURL = firestoreUserRepository.uploadProfileImage(uid, imageUri)
                 }
 
                 repository.updateUserProfile(

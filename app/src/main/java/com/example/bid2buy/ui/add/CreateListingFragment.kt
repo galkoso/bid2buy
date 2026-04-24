@@ -22,6 +22,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentCreateListingBinding
 import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
+import com.example.bid2buy.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -134,6 +135,11 @@ class CreateListingFragment : Fragment() {
         }
 
         binding.btnPublish.setOnClickListener {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to publish your listing.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             if (validateInputs()) {
                 val title = binding.etTitle.text.toString().trim()
                 val description = binding.etDescription.text.toString().trim()

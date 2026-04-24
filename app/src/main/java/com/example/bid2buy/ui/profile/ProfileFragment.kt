@@ -18,6 +18,7 @@ import com.example.bid2buy.R
 import com.example.bid2buy.WelcomeActivity
 import com.example.bid2buy.databinding.FragmentProfileBinding
 import com.example.bid2buy.model.UserProfile
+import com.example.bid2buy.util.NetworkUtils
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.collectLatest
@@ -60,7 +61,6 @@ class ProfileFragment : Fragment() {
         binding.userInitials.visibility = View.VISIBLE
         binding.profileImage.visibility = View.GONE
 
-        // Gray out elements and disable clicks
         val grayAlpha = 0.5f
         
         binding.editProfileBtn.isEnabled = false
@@ -81,13 +81,10 @@ class ProfileFragment : Fragment() {
         binding.myBidsSection.isEnabled = false
         binding.myBidsSection.alpha = grayAlpha
 
-        // Account Activity section
         binding.memberSince.text = "N/A"
         binding.totalItemsSold.text = "0"
         binding.successRate.text = "0%"
         
-        // Gray out the parent containers if needed, or individual items
-        // For simplicity, let's just make the logout section work
         binding.logoutSection.setOnClickListener {
             handleLogout()
         }
@@ -167,7 +164,6 @@ class ProfileFragment : Fragment() {
             binding.profileImage.visibility = View.GONE
         }
         
-        // Count labels are updated via separate flows in setupObservers()
         binding.totalItemsSold.text = profile.totalItemsSold.toString()
 
         profile.createdAt?.let {
@@ -192,6 +188,10 @@ class ProfileFragment : Fragment() {
         }
 
         binding.editProfileBtn.setOnClickListener {
+            if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to edit your profile.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToEditProfileFragment())
         }
 
