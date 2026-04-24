@@ -2,6 +2,7 @@ package com.example.bid2buy.repositories
 
 import android.net.Uri
 import com.example.bid2buy.model.Listing
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -29,7 +30,7 @@ class ListingsRepository {
                     .child("listing_photos")
                     .child(uid)
                     .child(listingId)
-                    .child("photo_${System.currentTimeMillis()}_$index.jpg")
+                    .child("photo_${TimeUtils.currentTimeMillis()}_$index.jpg")
                 
                 storageRef.putFile(uri).await()
                 storageRef.downloadUrl.await().toString()
@@ -55,7 +56,7 @@ class ListingsRepository {
             val currentListing = snapshot.toObject(Listing::class.java) 
                 ?: throw Exception("Listing not found")
 
-            val now = Timestamp.now()
+            val now = TimeUtils.now()
             if (currentListing.closingAt != null && currentListing.closingAt.compareTo(now) < 0) {
                 throw Exception("The auction has already closed")
             }

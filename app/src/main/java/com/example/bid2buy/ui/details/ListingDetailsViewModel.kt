@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -74,7 +75,7 @@ class ListingDetailsViewModel : ViewModel() {
         
         timerJob = viewModelScope.launch {
             while (true) {
-                val now = Timestamp.now()
+                val now = TimeUtils.now()
                 val diff = closingAt.toDate().time - now.toDate().time
                 
                 if (diff <= 0) {
@@ -101,7 +102,7 @@ class ListingDetailsViewModel : ViewModel() {
         val owner = !isGuest && currentUserUid == listing.createdByUid
         _isOwner.value = owner
 
-        val now = Timestamp.now()
+        val now = TimeUtils.now()
         val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
         val closed = listing.status == "CLOSED" || isExpired
         _isClosed.value = closed

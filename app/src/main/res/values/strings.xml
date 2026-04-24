@@ -63,6 +63,14 @@
     <string name="simple_text_placeholder">Placeholder</string>
     <string name="settings">Settings</string>
 
+    <!-- Edit Profile Strings -->
+    <string name="change_photo">Change Photo</string>
+    <string name="general_info">General Info</string>
+    <string name="display_name">Display Name</string>
+    <string name="your_name">Your Name</string>
+    <string name="email">Email</string>
+    <string name="location">Location</string>
+
     <!-- Create/Edit Listing Strings -->
     <string name="create_listing_title">Create Listing</string>
     <string name="edit_listing_title">Edit Listing</string>
@@ -93,8 +101,10 @@
     <string name="publish_listing">Publish Listing</string>
     <string name="save_changes">Save Changes</string>
     <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
 
     <!-- Content Descriptions -->
+    <string name="desc_profile_image">Profile Image</string>
     <string name="desc_email_icon">Email Icon</string>
     <string name="desc_my_listings_icon">My Listings Icon</string>
     <string name="desc_arrow_right">Arrow Right</string>
@@ -107,6 +117,16 @@
     <string name="desc_price_up">Increase Price</string>
     <string name="desc_price_down">Decrease Price</string>
     <string name="desc_info_icon">Information Icon</string>
+    <string name="desc_live_bidding">Live Bidding Icon</string>
+    <string name="desc_secure">Secure Icon</string>
+    <string name="desc_timer">Timer Icon</string>
+    <string name="desc_bids_empty_icon">Bids Empty State Icon</string>
+    <string name="desc_category_icon">Category Icon</string>
+    <string name="desc_condition_icon">Condition Icon</string>
+    <string name="desc_location_icon">Location Icon</string>
+    <string name="desc_timer_icon">Timer Icon</string>
+    <string name="desc_delete_icon">Delete Icon</string>
+    <string name="desc_avatar">Bidder Avatar</string>
 
     <!-- Home Fragment Strings -->
     <string name="browse_auctions">Browse Auctions</string>
@@ -127,4 +147,41 @@
     <string name="clear_all">Clear All</string>
     <string name="apply_filters">Apply Filters</string>
     <string name="desc_close_filters">Close Filters</string>
+
+    <!-- Bid Bottom Sheet Strings -->
+    <string name="place_your_bid">Place Your Bid</string>
+    <string name="current_highest_bid">Current highest bid</string>
+    <string name="your_bid_amount">Your bid amount</string>
+    <string name="minimum_amount">Minimum amount</string>
+    <string name="confirm_bid">Confirm Bid</string>
+    <string name="desc_close_bid_sheet">Close</string>
+
+    <!-- Bid History Strings -->
+    <string name="bid_history_title">Bid History</string>
+
+    <!-- Tab Strings -->
+    <string name="tab_active">Active</string>
+    <string name="tab_won">Won</string>
+    <string name="tab_lost">Lost</string>
+    <string name="no_bids_yet">No bids yet</string>
+    <string name="no_active_bids">You have no active bids</string>
+    <string name="no_won_bids">You haven\'t won any auctions yet</string>
+    <string name="no_lost_bids">No lost auctions found</string>
+
+    <!-- Listing Details Strings -->
+    <string name="description_title">Description</string>
+    <string name="place_a_bid">Place a Bid</string>
+    <string name="edit">Edit</string>
+    <string name="view_bids_count">View %1$d bids</string>
+
+    <!-- My Listings Fragment Strings -->
+    <string name="active_with_count">Active (%1$d)</string>
+    <string name="closed_with_count">Closed (%1$d)</string>
+
+    <!-- Bid Card Strings -->
+    <string name="label_your_bid">Your bid</string>
+    <string name="label_highest">Highest</string>
+    <string name="desc_item_image">Item Image</string>
+    <string name="label_current_bid">Current bid</string>
+    <string name="bullet_separator">\u2022</string>
 </resources>

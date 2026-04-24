@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.ItemMyListingBinding
 import com.example.bid2buy.model.Listing
+import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.Timestamp
 import java.util.concurrent.TimeUnit
 
@@ -47,7 +48,7 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
             binding.tvBidsCount.text = "${listing.bidCount} bids"
             binding.ivGraph.visibility = if (listing.bidCount > 0) View.VISIBLE else View.GONE
 
-            val now = Timestamp.now()
+            val now = TimeUtils.now()
             val closingAt = listing.closingAt
             
             if (closingAt != null) {

@@ -25,7 +25,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="Edit Profile"
+                android:text="@string/edit_profile"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -74,6 +74,7 @@
                             android:id="@+id/profileImage"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:contentDescription="@string/desc_profile_image"
                             android:scaleType="centerCrop"
                             tools:src="@tools:sample/avatars" />
 
@@ -93,7 +94,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="Change Photo"
+                        android:text="@string/change_photo"
                         android:textAllCaps="false"
                         app:icon="@drawable/ic_camera" />
                 </LinearLayout>
@@ -120,7 +121,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="General Info"
+                        android:text="@string/general_info"
                         android:textColor="@color/black"
                         android:textSize="18sp" />
 
@@ -129,7 +130,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Display Name"
+                        android:text="@string/display_name"
                         android:textColor="@color/black"
                         android:textSize="14sp" />
 
@@ -138,8 +139,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:autofillHints="name"
                         android:background="@drawable/edit_text_background"
-                        android:hint="Your Name"
+                        android:hint="@string/your_name"
                         android:inputType="textPersonName"
                         android:minHeight="48dp"
                         android:padding="12dp"
@@ -150,7 +152,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Email"
+                        android:text="@string/email"
                         android:textColor="@color/black"
                         android:textSize="14sp" />
 
@@ -159,9 +161,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:autofillHints="emailAddress"
                         android:background="@drawable/edit_text_background"
                         android:enabled="false"
-                        android:hint="Email"
+                        android:hint="@string/email"
                         android:inputType="textEmailAddress"
                         android:minHeight="48dp"
                         android:padding="12dp"
@@ -173,7 +176,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="Location"
+                        android:text="@string/location"
                         android:textColor="@color/black"
                         android:textSize="14sp" />
 
@@ -182,8 +185,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:autofillHints="postalAddress"
                         android:background="@drawable/edit_text_background"
-                        android:hint="Location"
+                        android:hint="@string/location"
                         android:inputType="text"
                         android:minHeight="48dp"
                         android:padding="12dp"
@@ -198,7 +202,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"
                 android:backgroundTint="@color/dark_button"
-                android:text="Save Changes"
+                android:text="@string/save_changes"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:textSize="16sp"
@@ -211,7 +215,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="24dp"
-                android:text="Cancel"
+                android:text="@string/cancel"
                 android:textAllCaps="false"
                 android:textColor="@color/black"
                 android:textSize="16sp"
