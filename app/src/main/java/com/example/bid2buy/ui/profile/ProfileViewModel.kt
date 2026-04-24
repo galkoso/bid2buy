@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -41,6 +42,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _winsCount = MutableStateFlow(0)
     val winsCount: StateFlow<Int> = _winsCount.asStateFlow()
 
+    private val _totalItemsSold = MutableStateFlow(0)
+    val totalItemsSold: StateFlow<Int> = _totalItemsSold.asStateFlow()
+
+    private val _totalBidsCount = MutableStateFlow(0)
+
     init {
         val uid = auth.currentUser?.uid
         if (uid != null) {
@@ -49,6 +55,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             loadActiveListingsCount(uid)
             loadActiveBidsCount(uid)
             loadWinsCount(uid)
+            loadTotalItemsSold(uid)
+            loadTotalBidsCount(uid)
+            setupSuccessRateCalculation()
         } else {
             _errorMessage.value = "User not authenticated"
         }
@@ -59,7 +68,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             repository.observeUserProfile(uid).collectLatest { profile ->
                 if (profile != null) {
                     _userProfile.value = profile
-                    _successRate.value = profile.successRate
                 }
             }
         }
@@ -103,6 +111,40 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 }
             } catch (e: Exception) {
                 _winsCount.value = _userProfile.value?.winsCount ?: 0
+            }
+        }
+    }
+
+    private fun loadTotalItemsSold(uid: String) {
+        viewModelScope.launch {
+            try {
+                firestoreUserRepository.observeTotalItemsSold(uid).collectLatest { count ->
+                    _totalItemsSold.value = count
+                }
+            } catch (e: Exception) {
+                _totalItemsSold.value = _userProfile.value?.totalItemsSold ?: 0
+            }
+        }
+    }
+
+    private fun loadTotalBidsCount(uid: String) {
+        viewModelScope.launch {
+            try {
+                bidsRepository.observeTotalBidsCount(uid).collectLatest { count ->
+                    _totalBidsCount.value = count
+                }
+            } catch (e: Exception) {
+                _totalBidsCount.value = _userProfile.value?.totalBids ?: 0
+            }
+        }
+    }
+
+    private fun setupSuccessRateCalculation() {
+        viewModelScope.launch {
+            combine(_winsCount, _totalBidsCount) { wins, total ->
+                if (total > 0) (wins * 100) / total else 0
+            }.collectLatest { rate ->
+                _successRate.value = rate
             }
         }
     }

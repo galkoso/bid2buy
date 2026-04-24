@@ -127,6 +127,12 @@ class ProfileFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.totalItemsSold.collectLatest { count ->
+                        binding.totalItemsSold.text = count.toString()
+                    }
+                }
+
+                launch {
                     viewModel.errorMessage.collectLatest { message ->
                         message?.let {
                             if (FirebaseAuth.getInstance().currentUser != null) {
@@ -163,8 +169,6 @@ class ProfileFragment : Fragment() {
             binding.userInitials.visibility = View.VISIBLE
             binding.profileImage.visibility = View.GONE
         }
-        
-        binding.totalItemsSold.text = profile.totalItemsSold.toString()
 
         profile.createdAt?.let {
             val sdf = SimpleDateFormat("MMMM yyyy", Locale.getDefault())

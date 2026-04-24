@@ -9,8 +9,10 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class FirestoreUserRepository {
@@ -112,5 +114,24 @@ class FirestoreUserRepository {
                 }
             }
         return countFlow
+    }
+
+    fun observeTotalItemsSold(uid: String): Flow<Int> = callbackFlow {
+        val listener = listingsCollection
+            .whereEqualTo("createdByUid", uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                val now = Timestamp.now()
+                val soldCount = snapshot?.toObjects(Listing::class.java)?.count { listing ->
+                    val isExpired = listing.closingAt?.let { it.toDate().time <= now.toDate().time } ?: false
+                    val isClosed = listing.status == "CLOSED" || isExpired
+                    isClosed && listing.bidCount > 0
+                } ?: 0
+                trySend(soldCount)
+            }
+        awaitClose { listener.remove() }
     }
 }
