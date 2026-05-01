@@ -62,6 +62,9 @@
     <string name="success_rate">Success rate</string>
     <string name="simple_text_placeholder">Placeholder</string>
     <string name="settings">Settings</string>
+    <string name="currency">Currency</string>
+    <string name="current_currency_sample">ILS (₪)</string>
+    <string name="select_currency">Select Currency</string>
 
     <!-- Edit Profile Strings -->
     <string name="change_photo">Change Photo</string>
@@ -111,6 +114,7 @@
     <string name="desc_arrow_right">Arrow Right</string>
     <string name="desc_my_bids_icon">My Bids Icon</string>
     <string name="desc_settings_icon">Settings Icon</string>
+    <string name="desc_currency_icon">Currency Icon</string>
     <string name="desc_logout_icon">Logout Icon</string>
     <string name="desc_calendar_icon">Calendar Icon</string>
     <string name="desc_clock_icon">Clock Icon</string>
@@ -130,6 +134,8 @@
     <string name="desc_avatar">Bidder Avatar</string>
     <string name="desc_remove_photo">Remove Photo</string>
     <string name="desc_listing_photo">Listing Photo</string>
+    <string name="desc_close">Close</string>
+    <string name="desc_checkmark">Checkmark</string>
 
     <!-- Home Fragment Strings -->
     <string name="browse_auctions">Browse Auctions</string>

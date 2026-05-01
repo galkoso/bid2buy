@@ -12,6 +12,7 @@ data class ListingEntity(
     val condition: String,
     val location: String,
     val startingPrice: Double,
+    val currency: String,
     val closingAtMillis: Long?,
     val createdAtMillis: Long?,
     val createdByUid: String,

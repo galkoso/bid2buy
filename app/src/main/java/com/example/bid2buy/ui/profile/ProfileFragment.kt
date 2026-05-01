@@ -81,6 +81,9 @@ class ProfileFragment : Fragment() {
         binding.myBidsSection.isEnabled = false
         binding.myBidsSection.alpha = grayAlpha
 
+        binding.currencySection.isEnabled = false
+        binding.currencySection.alpha = grayAlpha
+
         binding.memberSince.text = "N/A"
         binding.totalItemsSold.text = "0"
         binding.successRate.text = "0%"
@@ -133,6 +136,12 @@ class ProfileFragment : Fragment() {
                 }
 
                 launch {
+                    viewModel.selectedCurrency.collectLatest { code ->
+                        updateCurrencyUI(code)
+                    }
+                }
+
+                launch {
                     viewModel.errorMessage.collectLatest { message ->
                         message?.let {
                             if (FirebaseAuth.getInstance().currentUser != null) {
@@ -145,6 +154,21 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun updateCurrencyUI(code: String) {
+        val currencyText = when (code) {
+            "ILS" -> "ILS (₪)"
+            "USD" -> "USD ($)"
+            "EUR" -> "EUR (€)"
+            "GBP" -> "GBP (£)"
+            "JPY" -> "JPY (¥)"
+            "AUD" -> "AUD (A$)"
+            "CAD" -> "CAD (C$)"
+            "CHF" -> "CHF (CHF)"
+            else -> "ILS (₪)"
+        }
+        binding.currentCurrencyText.text = currencyText
     }
 
     private fun hideShimmer() {
@@ -217,6 +241,10 @@ class ProfileFragment : Fragment() {
 
         binding.myBidsSection.setOnClickListener {
             navigateToBids(0)
+        }
+
+        binding.currencySection.setOnClickListener {
+            CurrencySelectorBottomSheetFragment().show(childFragmentManager, "CurrencySelector")
         }
     }
 

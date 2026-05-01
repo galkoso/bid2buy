@@ -1,6 +1,7 @@
 package com.example.bid2buy.ui.profile
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.data.local.AppDatabase
@@ -23,6 +24,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val repository = UserRepository(firestoreUserRepository, database.userDao())
     private val bidsRepository = BidsRepository()
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    
+    private val sharedPrefs = application.getSharedPreferences("bid2buy_prefs", Context.MODE_PRIVATE)
 
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
@@ -46,6 +49,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val totalItemsSold: StateFlow<Int> = _totalItemsSold.asStateFlow()
 
     private val _totalBidsCount = MutableStateFlow(0)
+
+    private val _selectedCurrency = MutableStateFlow(sharedPrefs.getString("selected_currency", "ILS") ?: "ILS")
+    val selectedCurrency: StateFlow<String> = _selectedCurrency.asStateFlow()
 
     init {
         val uid = auth.currentUser?.uid
@@ -165,6 +171,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 _errorMessage.value = e.localizedMessage ?: "Failed to update profile"
             }
         }
+    }
+
+    fun selectCurrency(currencyCode: String) {
+        sharedPrefs.edit().putString("selected_currency", currencyCode).apply()
+        _selectedCurrency.value = currencyCode
     }
 
     fun clearError() {

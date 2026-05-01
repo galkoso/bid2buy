@@ -24,6 +24,7 @@ import com.example.bid2buy.databinding.FragmentEditListingBinding
 import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.util.CurrencyManager
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -37,6 +38,7 @@ class EditListingFragment : Fragment() {
     private val viewModel: ListingDetailsViewModel by viewModels()
     private val args: EditListingFragmentArgs by navArgs()
     private val repository = ListingsRepository()
+    private lateinit var currencyManager: CurrencyManager
 
     private var selectedDateTime: Calendar = Calendar.getInstance()
     
@@ -71,6 +73,7 @@ class EditListingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        currencyManager = CurrencyManager.getInstance(requireContext())
         setupToolbar()
         setupDropdowns()
         setupPriceControls()
@@ -229,7 +232,11 @@ class EditListingFragment : Fragment() {
         
         binding.autoCategory.setText(listing.category, false)
         binding.autoCondition.setText(listing.condition, false)
-        binding.etPrice.setText(listing.startingPrice.toInt().toString())
+        
+        val targetCurrency = currencyManager.getSelectedCurrency()
+        val convertedPrice = currencyManager.convert(listing.startingPrice, listing.currency, targetCurrency)
+        binding.etPrice.setText(convertedPrice.toInt().toString())
+        binding.tvPriceLabel.text = "Starting Price ($targetCurrency) *"
 
         listing.closingAt?.let { timestamp ->
             selectedDateTime.time = timestamp.toDate()
@@ -237,7 +244,6 @@ class EditListingFragment : Fragment() {
             updateTimeDisplay()
         }
 
-        // Populate photos only if not already populated (to avoid overwriting user changes during recomposition/updates)
         if (currentPhotos.isEmpty()) {
             currentPhotos.addAll(listing.photoUrls.map { PhotoItem.Remote(it) })
             renderPhotos()
@@ -327,12 +333,17 @@ class EditListingFragment : Fragment() {
                 if (listing.bidCount == 0) {
                     val category = binding.autoCategory.text.toString()
                     val condition = binding.autoCondition.text.toString()
-                    val price = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
+                    
+                    val inputPrice = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
+                    val targetCurrency = currencyManager.getSelectedCurrency()
+                    // Convert back to listing original currency before saving
+                    val priceInOriginalCurrency = currencyManager.convert(inputPrice, targetCurrency, listing.currency)
+                    
                     val closingAt = Timestamp(selectedDateTime.time)
 
                     updates["category"] = category
                     updates["condition"] = condition
-                    updates["startingPrice"] = price
+                    updates["startingPrice"] = priceInOriginalCurrency
                     updates["closingAt"] = closingAt
                 }
 

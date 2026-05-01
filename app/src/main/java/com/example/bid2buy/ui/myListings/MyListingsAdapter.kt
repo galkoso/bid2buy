@@ -10,8 +10,8 @@ import com.bumptech.glide.Glide
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.ItemMyListingBinding
 import com.example.bid2buy.model.Listing
+import com.example.bid2buy.util.CurrencyManager
 import com.example.bid2buy.util.TimeUtils
-import com.google.firebase.Timestamp
 import java.util.concurrent.TimeUnit
 
 class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapter<Listing, MyListingsAdapter.ViewHolder>(DiffCallback()) {
@@ -37,13 +37,20 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
             binding.tvLocation.text = listing.location
             binding.tvCondition.text = listing.condition.lowercase()
             
-            // Fix: Display the current highest bid if there are bids, otherwise the starting price.
-            val currentPrice = if (listing.bidCount > 0) {
+            val currencyManager = CurrencyManager.getInstance(binding.root.context)
+            val targetCurrency = currencyManager.getSelectedCurrency()
+            
+            // Get original price and its currency from the listing object
+            val originalPrice = if (listing.bidCount > 0) {
                 listing.currentHighestBid ?: listing.startingPrice
             } else {
                 listing.startingPrice
             }
-            binding.tvPrice.text = "₪${currentPrice.toInt()}"
+            val originalCurrency = listing.currency
+
+            // Convert from original currency to the user's selected currency
+            val convertedPrice = currencyManager.convert(originalPrice, originalCurrency, targetCurrency)
+            binding.tvPrice.text = currencyManager.formatPrice(convertedPrice, targetCurrency)
             
             binding.tvBidsCount.text = "${listing.bidCount} bids"
             binding.ivGraph.visibility = if (listing.bidCount > 0) View.VISIBLE else View.GONE

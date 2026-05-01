@@ -39,6 +39,7 @@ class CreateListingViewModel(
         condition: String,
         location: String,
         startingPrice: Double,
+        currency: String,
         closingDate: Date,
         imageUris: List<Uri>
     ) {
@@ -73,6 +74,7 @@ class CreateListingViewModel(
                         condition = condition,
                         location = location,
                         startingPrice = startingPrice,
+                        currency = currency,
                         closingAt = Timestamp(closingDate),
                         createdByUid = currentUser.uid,
                         createdByName = userProfile?.displayName ?: currentUser.displayName ?: "Seller",
