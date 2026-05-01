@@ -43,7 +43,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private var lastVisibleDocument: DocumentSnapshot? = null
     private var canLoadMore = true
     
-    // Pagination settings for local display (UI Limit)
+    // Pagination settings for local display
     private var displayedItemsLimit = 20
     private val PAGE_SIZE = 20
 
@@ -69,7 +69,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (observationJob != null) return
 
         observationJob = viewModelScope.launch {
-            repository.observeActiveListings().collectLatest { listings ->
+            // Pass the current time to the DAO's observation method as requested.
+            repository.observeActiveListings(TimeUtils.currentTimeMillis()).collectLatest { listings ->
                 lastFetchedListings = listings
                 processAndPostListings()
             }
@@ -94,9 +95,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoading.value = true
             fetchExchangeRates()
-            // Fetch a larger batch (50) from network to ensure we have enough "valid" items to fill the UI limit (20)
-            // Some "ACTIVE" items in Firestore might be expired based on their closingAt timestamp.
-            lastVisibleDocument = repository.refreshActiveListings(limit = 50)
+            // Server-side filtering now ensures we get up to 20 UNEXPIRED items.
+            lastVisibleDocument = repository.refreshActiveListings(limit = 20)
             canLoadMore = lastVisibleDocument != null
             _isLoading.value = false
         }
@@ -119,8 +119,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _isPaginating.value = true
-            // Fetch more from network (batch of 50)
-            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument, limit = 50)
+            // Fetch 20 more valid items from network
+            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument, limit = 20)
             if (lastDoc != null) {
                 lastVisibleDocument = lastDoc
             } else {
@@ -153,11 +153,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun getFilteredList(): List<Listing> {
-        val now = TimeUtils.now()
-
-        var filteredList = lastFetchedListings.filter { 
-            it.closingAt != null && it.closingAt.toDate().time > now.toDate().time
-        }
+        // Manual closingAt time-check removed as the database now handles this.
+        var filteredList = lastFetchedListings
 
         currentSearchQuery?.let { query ->
             filteredList = filteredList.filter {
@@ -178,7 +175,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val basePrice = if (listing.bidCount > 0) listing.currentHighestBid ?: listing.startingPrice else listing.startingPrice
                 
                 // For filtering, we stick to the base currency (₪/ILS) logic to keep it consistent
-                // or we could convert the filter thresholds. 
                 // Given the instructions, we keep "Under ₪100" as a label but we can apply it to the base price.
                 when (range) {
                     "Under ₪100" -> basePrice < 100
