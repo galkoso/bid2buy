@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ListingDao {
-    @Query("SELECT * FROM listings WHERE status = 'ACTIVE' ORDER BY closingAtMillis ASC")
-    fun getActiveListings(): Flow<List<ListingEntity>>
+    @Query("SELECT * FROM listings WHERE status = 'ACTIVE' AND closingAtMillis > :currentTimeMillis ORDER BY closingAtMillis ASC")
+    fun getActiveListings(currentTimeMillis: Long): Flow<List<ListingEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertListings(listings: List<ListingEntity>)

@@ -4,6 +4,7 @@ import com.example.bid2buy.data.local.dao.ListingDao
 import com.example.bid2buy.data.mapper.toDomain
 import com.example.bid2buy.data.mapper.toEntity
 import com.example.bid2buy.model.Listing
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -15,16 +16,19 @@ class ListingRepository(
     private val firestore: FirebaseFirestore,
     private val listingDao: ListingDao
 ) {
-    fun observeActiveListings(): Flow<List<Listing>> {
-        return listingDao.getActiveListings().map { entities ->
+    fun observeActiveListings(currentTimeMillis: Long): Flow<List<Listing>> {
+        return listingDao.getActiveListings(currentTimeMillis).map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
     suspend fun refreshActiveListings(limit: Long = 20): DocumentSnapshot? {
         try {
+            val now = Timestamp.now()
             val snapshot = firestore.collection("listings")
                 .whereEqualTo("status", "ACTIVE")
+                .whereGreaterThan("closingAt", now)
+                .orderBy("closingAt", Query.Direction.ASCENDING)
                 .limit(limit)
                 .get()
                 .await()
@@ -45,8 +49,11 @@ class ListingRepository(
         if (lastVisible == null) return null
         
         try {
+            val now = Timestamp.now()
             val snapshot = firestore.collection("listings")
                 .whereEqualTo("status", "ACTIVE")
+                .whereGreaterThan("closingAt", now)
+                .orderBy("closingAt", Query.Direction.ASCENDING)
                 .startAfter(lastVisible)
                 .limit(limit)
                 .get()
