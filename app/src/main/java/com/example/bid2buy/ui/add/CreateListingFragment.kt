@@ -23,6 +23,7 @@ import com.bumptech.glide.Glide
 import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentCreateListingBinding
 import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
+import com.example.bid2buy.util.CurrencyManager
 import com.example.bid2buy.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -33,6 +34,7 @@ class CreateListingFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: CreateListingViewModel by viewModels()
+    private lateinit var currencyManager: CurrencyManager
 
     private val selectedImageUris = mutableListOf<Uri>()
     
@@ -96,6 +98,7 @@ class CreateListingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        currencyManager = CurrencyManager.getInstance(requireContext())
         setupNavigation()
         setupInputs()
         setupDropdowns()
@@ -155,6 +158,7 @@ class CreateListingFragment : Fragment() {
                 val condition = binding.autoCondition.text.toString()
                 val location = binding.etLocation.text.toString().trim()
                 val price = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
+                val selectedCurrency = currencyManager.getSelectedCurrency()
 
                 viewModel.publishListing(
                     title = title,
@@ -163,6 +167,7 @@ class CreateListingFragment : Fragment() {
                     condition = condition,
                     location = location,
                     startingPrice = price,
+                    currency = selectedCurrency,
                     closingDate = selectedDateTime.time,
                     imageUris = selectedImageUris
                 )
@@ -288,6 +293,9 @@ class CreateListingFragment : Fragment() {
     }
 
     private fun setupPriceControls() {
+        val currentCurrency = currencyManager.getSelectedCurrency()
+        binding.tvPriceLabel.text = "Starting Price ($currentCurrency) *"
+
         binding.ivPriceUp.setOnClickListener {
             val currentPrice = binding.etPrice.text.toString().toIntOrNull() ?: 0
             binding.etPrice.setText((currentPrice + 1).toString())

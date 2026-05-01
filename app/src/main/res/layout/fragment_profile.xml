@@ -475,6 +475,7 @@
                         android:padding="16dp">
 
                         <LinearLayout
+                            android:id="@+id/currencySection"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:background="?attr/selectableItemBackground"
@@ -484,22 +485,45 @@
                             android:orientation="horizontal"
                             android:paddingVertical="12dp">
 
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:contentDescription="@string/settings"
-                                android:src="@drawable/ic_settings"
-                                app:tint="@color/text_secondary" />
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                app:cardBackgroundColor="#E8EFFF"
+                                app:cardCornerRadius="8dp"
+                                app:cardElevation="0dp">
 
-                            <TextView
+                                <ImageView
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@string/desc_currency_icon"
+                                    android:src="@drawable/ic_currency"
+                                    app:tint="#4B6BFB" />
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="16dp"
                                 android:layout_weight="1"
-                                android:text="@string/settings"
-                                android:textColor="@color/black"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/currency"
+                                    android:textColor="@color/black"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/currentCurrencyText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/current_currency_sample"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="14sp" />
+                            </LinearLayout>
 
                             <ImageView
                                 android:layout_width="16dp"

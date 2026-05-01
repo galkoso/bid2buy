@@ -15,6 +15,7 @@ import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentListingDetailsBinding
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.ui.bid.PlaceBidBottomSheetFragment
+import com.example.bid2buy.util.CurrencyManager
 import com.example.bid2buy.util.NetworkUtils
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -25,6 +26,7 @@ class ListingDetailsFragment : Fragment() {
     
     private val viewModel: ListingDetailsViewModel by viewModels()
     private val args: ListingDetailsFragmentArgs by navArgs()
+    private lateinit var currencyManager: CurrencyManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +40,7 @@ class ListingDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        currencyManager = CurrencyManager.getInstance(requireContext())
         setupHeader()
         observeViewModel()
         
@@ -183,19 +186,23 @@ class ListingDetailsFragment : Fragment() {
         
         binding.tvSellerName.text = "by ${listing.createdByName}"
         
+        val targetCurrency = currencyManager.getSelectedCurrency()
         val currentBid = listing.currentHighestBid
         if (currentBid != null) {
-            binding.tvCurrentBid.text = "₪${currentBid.toInt()}"
+            val convertedBid = currencyManager.convert(currentBid, listing.currency, targetCurrency)
+            binding.tvCurrentBid.text = currencyManager.formatPrice(convertedBid, targetCurrency)
             binding.tvBidLabel.text = "Current Highest Bid"
             binding.tvBidderName.text = "by ${listing.highestBidderName ?: "Unknown"}"
             binding.tvBidderName.visibility = View.VISIBLE
         } else {
-            binding.tvCurrentBid.text = "₪${listing.startingPrice.toInt()}"
+            val convertedPrice = currencyManager.convert(listing.startingPrice, listing.currency, targetCurrency)
+            binding.tvCurrentBid.text = currencyManager.formatPrice(convertedPrice, targetCurrency)
             binding.tvBidLabel.text = "Starting Price"
             binding.tvBidderName.visibility = View.GONE
         }
         
-        binding.tvStartingPrice.text = "Starting price: ₪${listing.startingPrice.toInt()}"
+        val convertedStartingPrice = currencyManager.convert(listing.startingPrice, listing.currency, targetCurrency)
+        binding.tvStartingPrice.text = "Starting price: ${currencyManager.formatPrice(convertedStartingPrice, targetCurrency)}"
         binding.btnViewBids.text = "View ${listing.bidCount} bids"
 
         if (listing.photoUrls.isNotEmpty()) {

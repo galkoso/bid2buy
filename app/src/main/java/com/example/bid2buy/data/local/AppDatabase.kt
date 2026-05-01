@@ -9,7 +9,7 @@ import com.example.bid2buy.data.local.dao.UserDao
 import com.example.bid2buy.data.local.entity.ListingEntity
 import com.example.bid2buy.data.local.entity.UserEntity
 
-@Database(entities = [UserEntity::class, ListingEntity::class], version = 2, exportSchema = false)
+@Database(entities = [UserEntity::class, ListingEntity::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun listingDao(): ListingDao

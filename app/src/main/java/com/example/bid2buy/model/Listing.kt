@@ -11,6 +11,7 @@ data class Listing(
     val condition: String = "",
     val location: String = "",
     val startingPrice: Double = 0.0,
+    val currency: String = "ILS",
     val closingAt: Timestamp? = null,
     @ServerTimestamp
     val createdAt: Timestamp? = null,

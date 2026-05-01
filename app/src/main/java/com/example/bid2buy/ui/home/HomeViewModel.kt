@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingRepository
+import com.example.bid2buy.util.CurrencyManager
 import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,6 +22,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     private val firestore = FirebaseFirestore.getInstance()
     private val repository = ListingRepository(firestore, database.listingDao())
+    private val currencyManager = CurrencyManager.getInstance(application)
     
     private val _listings = MutableLiveData<List<Listing>>()
     val listings: LiveData<List<Listing>> = _listings
@@ -41,7 +43,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private var lastVisibleDocument: DocumentSnapshot? = null
     private var canLoadMore = true
     
-    // Pagination settings for local display
+    // Pagination settings for local display (UI Limit)
     private var displayedItemsLimit = 20
     private val PAGE_SIZE = 20
 
@@ -51,8 +53,16 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private var currentSearchQuery: String? = null
 
     init {
+        fetchExchangeRates()
         startListening()
         refresh()
+    }
+
+    private fun fetchExchangeRates() {
+        viewModelScope.launch {
+            currencyManager.fetchRatesIfNeeded()
+            processAndPostListings() // Refresh UI with converted prices if needed
+        }
     }
 
     fun startListening() {
@@ -80,10 +90,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refresh() {
-        displayedItemsLimit = PAGE_SIZE // Reset display limit on refresh
+        displayedItemsLimit = 20 // Reset display limit on refresh
         viewModelScope.launch {
             _isLoading.value = true
-            lastVisibleDocument = repository.refreshActiveListings()
+            fetchExchangeRates()
+            // Fetch a larger batch (50) from network to ensure we have enough "valid" items to fill the UI limit (20)
+            // Some "ACTIVE" items in Firestore might be expired based on their closingAt timestamp.
+            lastVisibleDocument = repository.refreshActiveListings(limit = 50)
             canLoadMore = lastVisibleDocument != null
             _isLoading.value = false
         }
@@ -106,7 +119,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _isPaginating.value = true
-            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument)
+            // Fetch more from network (batch of 50)
+            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument, limit = 50)
             if (lastDoc != null) {
                 lastVisibleDocument = lastDoc
             } else {
@@ -120,13 +134,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         currentCategory = if (category == "All Categories" || category.isNullOrBlank()) null else category
         currentCondition = if (condition == "All Conditions" || condition.isNullOrBlank()) null else condition
         currentPriceRange = if (priceRange == "All Prices" || priceRange.isNullOrBlank()) null else priceRange
-        displayedItemsLimit = PAGE_SIZE // Reset limit when filters change
+        displayedItemsLimit = 20 // Reset limit when filters change
         processAndPostListings()
     }
 
     fun setSearchQuery(query: String?) {
         currentSearchQuery = if (query.isNullOrBlank()) null else query
-        displayedItemsLimit = PAGE_SIZE // Reset limit when search changes
+        displayedItemsLimit = 20 // Reset limit when search changes
         processAndPostListings()
     }
 
@@ -134,7 +148,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         currentCategory = null
         currentCondition = null
         currentPriceRange = null
-        displayedItemsLimit = PAGE_SIZE
+        displayedItemsLimit = 20
         processAndPostListings()
     }
 
@@ -161,11 +175,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         currentPriceRange?.let { range ->
             filteredList = filteredList.filter { listing ->
-                val priceToShow = if (listing.bidCount > 0) listing.currentHighestBid ?: listing.startingPrice else listing.startingPrice
+                val basePrice = if (listing.bidCount > 0) listing.currentHighestBid ?: listing.startingPrice else listing.startingPrice
+                
+                // For filtering, we stick to the base currency (₪/ILS) logic to keep it consistent
+                // or we could convert the filter thresholds. 
+                // Given the instructions, we keep "Under ₪100" as a label but we can apply it to the base price.
                 when (range) {
-                    "Under ₪100" -> priceToShow < 100
-                    "₪100 - ₪500" -> priceToShow in 100.0..500.0
-                    "Over ₪500" -> priceToShow > 500
+                    "Under ₪100" -> basePrice < 100
+                    "₪100 - ₪500" -> basePrice in 100.0..500.0
+                    "Over ₪500" -> basePrice > 500
                     else -> true
                 }
             }

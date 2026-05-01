@@ -6,6 +6,16 @@ plugins {
     id 'kotlin-kapt'
 }
 
+def getEnvProperty(String key) {
+    def envFile = rootProject.file(".env")
+    if (envFile.exists()) {
+        def props = new Properties()
+        envFile.withInputStream { props.load(it) }
+        return props.getProperty(key)
+    }
+    return ""
+}
+
 android {
     namespace 'com.example.bid2buy'
     compileSdk 34
@@ -18,6 +28,8 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        buildConfigField "String", "EXCHANGE_RATE_API_KEY", "\"${getEnvProperty("EXCHANGE_RATE_API_KEY")}\""
     }
 
     buildTypes {
@@ -35,6 +47,7 @@ android {
     }
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
 }
 
@@ -68,6 +81,11 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     
+    // Retrofit & Gson
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
+
     // Coroutines Play Services
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3'
 
