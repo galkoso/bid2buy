@@ -77,7 +77,7 @@
     <!-- Create/Edit Listing Strings -->
     <string name="create_listing_title">Create Listing</string>
     <string name="edit_listing_title">Edit Listing</string>
-    <string name="edit_listing_warning">This listing has bids. You can only edit title, description, and location.</string>
+    <string name="edit_listing_warning">This listing has bids. You can only edit photos, title, description, and location.</string>
     <string name="editable_details_title">Editable Details</string>
     <string name="locked_fields_title">Locked Fields</string>
     <string name="photos_title">Photos *</string>

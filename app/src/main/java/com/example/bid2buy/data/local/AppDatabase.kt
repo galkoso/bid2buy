@@ -4,15 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.bid2buy.data.local.dao.BidDao
 import com.example.bid2buy.data.local.dao.ListingDao
 import com.example.bid2buy.data.local.dao.UserDao
+import com.example.bid2buy.data.local.entity.BidEntity
 import com.example.bid2buy.data.local.entity.ListingEntity
 import com.example.bid2buy.data.local.entity.UserEntity
 
-@Database(entities = [UserEntity::class, ListingEntity::class], version = 3, exportSchema = false)
+@Database(entities = [UserEntity::class, ListingEntity::class, BidEntity::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun listingDao(): ListingDao
+    abstract fun bidDao(): BidDao
 
     companion object {
         @Volatile

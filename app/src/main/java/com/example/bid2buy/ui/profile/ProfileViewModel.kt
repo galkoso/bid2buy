@@ -9,7 +9,6 @@ import com.example.bid2buy.model.UserProfile
 import com.example.bid2buy.repositories.BidsRepository
 import com.example.bid2buy.repositories.FirestoreUserRepository
 import com.example.bid2buy.repositories.UserRepository
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,8 +21,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val database = AppDatabase.getDatabase(application)
     private val firestoreUserRepository = FirestoreUserRepository()
     private val repository = UserRepository(firestoreUserRepository, database.userDao())
-    private val bidsRepository = BidsRepository()
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val bidsRepository = BidsRepository(database.bidDao(), database.listingDao())
     
     private val sharedPrefs = application.getSharedPreferences("bid2buy_prefs", Context.MODE_PRIVATE)
 
@@ -54,7 +52,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val selectedCurrency: StateFlow<String> = _selectedCurrency.asStateFlow()
 
     init {
-        val uid = auth.currentUser?.uid
+        val uid = bidsRepository.getCurrentUserUid()
         if (uid != null) {
             observeProfile(uid)
             refreshProfile(uid)
@@ -64,6 +62,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             loadTotalItemsSold(uid)
             loadTotalBidsCount(uid)
             setupSuccessRateCalculation()
+            
+            // Sync data from Firestore to local cache
+            viewModelScope.launch {
+                bidsRepository.refreshUserBids(uid)
+            }
         } else {
             _errorMessage.value = "User not authenticated"
         }
@@ -116,7 +119,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     _winsCount.value = count
                 }
             } catch (e: Exception) {
-                _winsCount.value = _userProfile.value?.winsCount ?: 0
+                _winsCount.value = 0
             }
         }
     }
@@ -128,7 +131,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     _totalItemsSold.value = count
                 }
             } catch (e: Exception) {
-                _totalItemsSold.value = _userProfile.value?.totalItemsSold ?: 0
+                _totalItemsSold.value = 0
             }
         }
     }
@@ -140,7 +143,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     _totalBidsCount.value = count
                 }
             } catch (e: Exception) {
-                _totalBidsCount.value = _userProfile.value?.totalBids ?: 0
+                _totalBidsCount.value = 0
             }
         }
     }
@@ -148,27 +151,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private fun setupSuccessRateCalculation() {
         viewModelScope.launch {
             combine(_winsCount, _totalBidsCount) { wins, total ->
-                if (total > 0) (wins * 100) / total else 0
+                if (total > 0) ((wins.toDouble() / total) * 100).toInt() else 0
             }.collectLatest { rate ->
                 _successRate.value = rate
-            }
-        }
-    }
-
-    fun updateDisplayName(newDisplayName: String) {
-        val uid = auth.currentUser?.uid ?: return
-        val currentProfile = _userProfile.value
-        viewModelScope.launch {
-            try {
-                repository.updateUserProfile(
-                    uid = uid,
-                    displayName = newDisplayName,
-                    phoneNumber = currentProfile?.phoneNumber ?: "",
-                    location = currentProfile?.location ?: "",
-                    bio = currentProfile?.bio ?: ""
-                )
-            } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Failed to update profile"
             }
         }
     }

@@ -1,13 +1,14 @@
 package com.example.bid2buy.ui.add
 
+import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.FirestoreUserRepository
-import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.repositories.ListingRepository
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,15 +23,14 @@ sealed class CreateListingState {
     data class Error(val message: String) : CreateListingState()
 }
 
-class CreateListingViewModel(
-    private val listingsRepository: ListingsRepository = ListingsRepository(),
-    private val userRepository: FirestoreUserRepository = FirestoreUserRepository()
-) : ViewModel() {
+class CreateListingViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val database = AppDatabase.getDatabase(application)
+    private val listingsRepository = ListingRepository(database.listingDao())
+    private val userRepository = FirestoreUserRepository()
 
     private val _uiState = MutableStateFlow<CreateListingState>(CreateListingState.Idle)
     val uiState: StateFlow<CreateListingState> = _uiState
-
-    private val auth = FirebaseAuth.getInstance()
 
     fun publishListing(
         title: String,
@@ -43,8 +43,8 @@ class CreateListingViewModel(
         closingDate: Date,
         imageUris: List<Uri>
     ) {
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
+        val currentUserUid = listingsRepository.getCurrentUserUid()
+        if (currentUserUid == null) {
             _uiState.value = CreateListingState.Error("User not authenticated")
             return
         }
@@ -60,14 +60,15 @@ class CreateListingViewModel(
             _uiState.value = CreateListingState.Loading
             try {
                 val listingId = withContext(Dispatchers.IO) {
-                    val userProfile = userRepository.refreshUser(currentUser.uid)
+                    val userProfile = userRepository.refreshUser(currentUserUid)
                     
-                    val currentListingId = listingsRepository.getFirestoreInstance().collection("listings").document().id
-
-                    val photoUrls = listingsRepository.uploadImages(urisToUpload, currentListingId)
-
+                    // Generate a new ID using a repository-like method or just let createListing handle it
+                    // I'll use the repository's firestore instance indirectly if I had a method, 
+                    // but since I don't want to expose firestore, I'll pass an empty ID to createListing
+                    // or I'll add a helper to repository.
+                    
                     val listing = Listing(
-                        id = currentListingId,
+                        id = "", // repository.createListing will handle ID generation if empty
                         title = title,
                         description = description,
                         category = category,
@@ -76,14 +77,25 @@ class CreateListingViewModel(
                         startingPrice = startingPrice,
                         currency = currency,
                         closingAt = Timestamp(closingDate),
-                        createdByUid = currentUser.uid,
-                        createdByName = userProfile?.displayName ?: currentUser.displayName ?: "Seller",
-                        photoUrls = photoUrls,
+                        createdByUid = currentUserUid,
+                        createdByName = userProfile?.displayName ?: "Seller",
+                        photoUrls = emptyList(), // Will be updated after upload
                         status = "ACTIVE"
                     )
 
-                    listingsRepository.createListing(listing)
-                    currentListingId
+                    // Note: uploadImages requires a listingId. 
+                    // Let's modify the repo to generate an ID or handle this better.
+                    // For now, I'll use a placeholder or better, let's look at createListing in repo.
+                    
+                    // Actually, I'll use a small trick: 
+                    // I'll add a method to repo to get a new ID.
+                    
+                    val newId = listingsRepository.getFirestoreInstance().collection("listings").document().id
+                    val photoUrls = listingsRepository.uploadImages(urisToUpload, newId)
+                    
+                    val finalListing = listing.copy(id = newId, photoUrls = photoUrls)
+                    listingsRepository.createListing(finalListing)
+                    newId
                 }
 
                 _uiState.value = CreateListingState.Success(listingId)

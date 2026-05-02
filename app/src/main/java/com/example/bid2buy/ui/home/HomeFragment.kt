@@ -178,13 +178,17 @@ class HomeFragment : Fragment() {
         homeViewModel.listings.observe(viewLifecycleOwner) { listings ->
             adapter.submitList(listings)
             binding.tvItemCount.text = "${listings.size} items"
-            binding.swipeRefresh.isRefreshing = false
         }
 
         homeViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            if (!binding.swipeRefresh.isRefreshing) {
-                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            // Stop refresh spinner when loading is done
+            if (!isLoading) {
+                binding.swipeRefresh.isRefreshing = false
             }
+            
+            // Only show central progress bar if we aren't using swipe-to-refresh
+            val showProgressBar = isLoading && !binding.swipeRefresh.isRefreshing
+            binding.progressBar.visibility = if (showProgressBar) View.VISIBLE else View.GONE
         }
 
         homeViewModel.isPaginating.observe(viewLifecycleOwner) { isPaginating ->

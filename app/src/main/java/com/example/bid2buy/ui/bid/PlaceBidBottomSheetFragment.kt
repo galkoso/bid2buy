@@ -6,10 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.databinding.BottomSheetPlaceBidBinding
 import com.example.bid2buy.repositories.BidsRepository
+import com.example.bid2buy.util.CurrencyManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.launch
 
@@ -18,22 +19,31 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
     private var _binding: BottomSheetPlaceBidBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = BidsRepository()
+    private lateinit var repository: BidsRepository
+    private lateinit var currencyManager: CurrencyManager
     
     private var listingId: String = ""
     private var currentHighestBid: Double = 0.0
     private var startingPrice: Double = 0.0
     private var bidCount: Int = 0
+    private var listingCurrency: String = "ILS"
 
     companion object {
         const val TAG = "PlaceBidBottomSheetFragment"
-        fun newInstance(listingId: String, currentHighestBid: Double, startingPrice: Double, bidCount: Int): PlaceBidBottomSheetFragment {
+        fun newInstance(
+            listingId: String, 
+            currentHighestBid: Double, 
+            startingPrice: Double, 
+            bidCount: Int,
+            listingCurrency: String
+        ): PlaceBidBottomSheetFragment {
             val fragment = PlaceBidBottomSheetFragment()
             val args = Bundle()
             args.putString("listingId", listingId)
             args.putDouble("currentHighestBid", currentHighestBid)
             args.putDouble("startingPrice", startingPrice)
             args.putInt("bidCount", bidCount)
+            args.putString("listingCurrency", listingCurrency)
             fragment.arguments = args
             return fragment
         }
@@ -46,6 +56,7 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
             currentHighestBid = it.getDouble("currentHighestBid", 0.0)
             startingPrice = it.getDouble("startingPrice", 0.0)
             bidCount = it.getInt("bidCount", 0)
+            listingCurrency = it.getString("listingCurrency", "ILS")
         }
     }
 
@@ -57,13 +68,28 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val minBid = if (bidCount == 0) startingPrice else currentHighestBid + 1.0
+        val database = AppDatabase.getDatabase(requireContext().applicationContext)
+        repository = BidsRepository(database.bidDao(), database.listingDao())
+        currencyManager = CurrencyManager.getInstance(requireContext())
+
+        val selectedCurrency = currencyManager.getSelectedCurrency()
         
-        binding.textCurrentHighestBid.text = "₪${if (bidCount == 0) startingPrice.toInt() else currentHighestBid.toInt()}"
+        // The values passed to newInstance are in the listing's original currency.
+        // We calculate minBid in the listing's currency first.
+        val minBidInOriginalCurrency = if (bidCount == 0) startingPrice else currentHighestBid + 1.0
+        
+        // Convert for display and validation
+        val currentPriceInSelectedCurrency = currencyManager.convert(
+            if (bidCount == 0) startingPrice else currentHighestBid,
+            listingCurrency,
+            selectedCurrency
+        )
+        val minBidInSelectedCurrency = currencyManager.convert(minBidInOriginalCurrency, listingCurrency, selectedCurrency)
+        
+        binding.textCurrentHighestBid.text = currencyManager.formatPrice(currentPriceInSelectedCurrency, selectedCurrency)
         binding.bidLabel.text = if (bidCount == 0) "Starting price" else "Current highest bid"
         
-        // Fix overlap by setting hint on the Layout and clearing it from the EditText
-        binding.bidInputLayout.hint = "Amount (Minimum ₪${minBid.toInt()})"
+        binding.bidInputLayout.hint = "Amount (Minimum ${currencyManager.formatPrice(minBidInSelectedCurrency, selectedCurrency)})"
         binding.editBidAmount.hint = null
 
         binding.btnClose.setOnClickListener { dismiss() }
@@ -74,19 +100,26 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
 
         binding.btnConfirmBid.setOnClickListener {
             val amountStr = binding.editBidAmount.text.toString()
-            val amount = amountStr.toDoubleOrNull()
+            val amountInSelectedCurrency = amountStr.toDoubleOrNull()
 
-            if (amount == null) {
+            if (amountInSelectedCurrency == null) {
                 binding.bidInputLayout.error = "Please enter a valid amount"
                 return@setOnClickListener
             }
 
-            if (amount < minBid) {
-                binding.bidInputLayout.error = "Bid must be at least ₪${minBid.toInt()}"
+            if (amountInSelectedCurrency < minBidInSelectedCurrency) {
+                binding.bidInputLayout.error = "Bid must be at least ${currencyManager.formatPrice(minBidInSelectedCurrency, selectedCurrency)}"
                 return@setOnClickListener
             }
 
-            placeBid(amount)
+            // Convert back to original currency before saving to Firebase
+            val amountInOriginalCurrency = currencyManager.convert(
+                amountInSelectedCurrency,
+                selectedCurrency,
+                listingCurrency
+            )
+
+            placeBid(amountInOriginalCurrency)
         }
     }
 

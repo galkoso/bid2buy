@@ -7,11 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.databinding.ActivityMainBinding
-import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.NetworkUtils
 import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -27,8 +29,11 @@ class MainActivity : AppCompatActivity() {
         // Sync time with server and perform maintenance
         lifecycleScope.launch {
             TimeUtils.syncTime()
-            // Automatic cleanup of listings closed for more than a year
-            ListingsRepository().cleanupOldListings()
+            
+            // Rule: Local and Remote storage
+            val database = AppDatabase.getDatabase(applicationContext)
+            val repository = ListingRepository(database.listingDao())
+            repository.cleanupOldListings()
         }
 
         val navHostFragment = supportFragmentManager
@@ -40,12 +45,10 @@ class MainActivity : AppCompatActivity() {
         val isGuest = FirebaseAuth.getInstance().currentUser == null
 
         if (isGuest) {
-            // Faded out and disable FAB
             binding.fabAdd.alpha = 0.5f
             binding.fabAdd.setOnClickListener(null)
             binding.fabAdd.isClickable = false
 
-            // Disable restricted menu items
             val menu = binding.navView.menu
             menu.findItem(R.id.navigation_listings).isEnabled = false
             menu.findItem(R.id.navigation_bids).isEnabled = false
@@ -67,12 +70,6 @@ class MainActivity : AppCompatActivity() {
                 true
             } else {
                 false
-            }
-        }
-
-        binding.navView.setOnItemReselectedListener { item ->
-            if (item.itemId == R.id.navigation_bids && navController.currentDestination?.id == R.id.navigation_bids) {
-                return@setOnItemReselectedListener
             }
         }
 

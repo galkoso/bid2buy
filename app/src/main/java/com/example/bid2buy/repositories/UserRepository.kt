@@ -40,4 +40,6 @@ class UserRepository(
         firestoreRepository.updateUserProfile(uid, displayName, phoneNumber, location, bio, photoURL)
         refreshUserProfile(uid)
     }
+
+    fun getCurrentUserUid(): String? = firestoreRepository.getCurrentUserUid()
 }
