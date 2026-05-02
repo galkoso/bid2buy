@@ -15,14 +15,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class FirestoreUserRepository {
-
-    private val firestore = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
-    private val storage = FirebaseStorage.getInstance()
+class FirestoreUserRepository(
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+) {
 
     private val usersCollection = firestore.collection("users")
     private val listingsCollection = firestore.collection("listings")
+
+    fun getCurrentUserUid(): String? = auth.currentUser?.uid
 
     suspend fun ensureUserDocumentExists() {
         val uid = auth.currentUser?.uid ?: return

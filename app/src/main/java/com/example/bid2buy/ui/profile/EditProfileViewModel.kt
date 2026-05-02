@@ -8,7 +8,7 @@ import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.UserProfile
 import com.example.bid2buy.repositories.FirestoreUserRepository
 import com.example.bid2buy.repositories.UserRepository
-import com.google.firebase.auth.FirebaseAuth
+import com.example.bid2buy.repositories.BidsRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -16,8 +16,10 @@ class EditProfileViewModel(application: Application) : AndroidViewModel(applicat
     private val database = AppDatabase.getDatabase(application)
     private val firestoreUserRepository = FirestoreUserRepository()
     private val repository = UserRepository(firestoreUserRepository, database.userDao())
-    private val auth = FirebaseAuth.getInstance()
-    private val uid = auth.currentUser?.uid ?: ""
+    // Using BidsRepository just to get the current UID in a "clean" way, 
+    // or I could add getCurrentUserUid to UserRepository.
+    private val bidsRepository = BidsRepository(database.bidDao(), database.listingDao())
+    private val uid = bidsRepository.getCurrentUserUid() ?: ""
 
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()

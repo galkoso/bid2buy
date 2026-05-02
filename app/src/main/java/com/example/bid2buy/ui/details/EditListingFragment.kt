@@ -20,12 +20,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.example.bid2buy.R
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.databinding.FragmentEditListingBinding
 import com.example.bid2buy.databinding.ItemPhotoPreviewBinding
 import com.example.bid2buy.model.Listing
-import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.CurrencyManager
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,7 +39,9 @@ class EditListingFragment : Fragment() {
 
     private val viewModel: ListingDetailsViewModel by viewModels()
     private val args: EditListingFragmentArgs by navArgs()
-    private val repository = ListingsRepository()
+    
+    // Updated to use the consolidated ListingRepository
+    private lateinit var repository: ListingRepository
     private lateinit var currencyManager: CurrencyManager
 
     private var selectedDateTime: Calendar = Calendar.getInstance()
@@ -73,7 +77,10 @@ class EditListingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val database = AppDatabase.getDatabase(requireContext().applicationContext)
+        repository = ListingRepository(database.listingDao())
         currencyManager = CurrencyManager.getInstance(requireContext())
+        
         setupToolbar()
         setupDropdowns()
         setupPriceControls()
@@ -296,8 +303,6 @@ class EditListingFragment : Fragment() {
                 binding.btnSave.isEnabled = false
                 binding.btnSave.text = "Saving..."
 
-                // 1. Separate new photos from existing ones
-                val existingUrls = currentPhotos.filterIsInstance<PhotoItem.Remote>().map { it.url }
                 val newUris = currentPhotos.filterIsInstance<PhotoItem.Local>().map { it.uri }
 
                 // 2. Upload new photos if any
@@ -313,8 +318,6 @@ class EditListingFragment : Fragment() {
                     when (photo) {
                         is PhotoItem.Remote -> finalPhotoUrls.add(photo.url)
                         is PhotoItem.Local -> {
-                            // Find corresponding uploaded URL. 
-                            // This depends on maintaining order in uploadImages.
                             val newIndex = newUris.indexOf(photo.uri)
                             if (newIndex != -1) {
                                 finalPhotoUrls.add(uploadedUrls[newIndex])
@@ -336,7 +339,6 @@ class EditListingFragment : Fragment() {
                     
                     val inputPrice = binding.etPrice.text.toString().toDoubleOrNull() ?: 0.0
                     val targetCurrency = currencyManager.getSelectedCurrency()
-                    // Convert back to listing original currency before saving
                     val priceInOriginalCurrency = currencyManager.convert(inputPrice, targetCurrency, listing.currency)
                     
                     val closingAt = Timestamp(selectedDateTime.time)

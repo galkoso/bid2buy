@@ -1,22 +1,23 @@
 package com.example.bid2buy.ui.myListings
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.Listing
-import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.TimeUtils
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class MyListingsViewModel : ViewModel() {
+class MyListingsViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = ListingsRepository()
-    private val auth = FirebaseAuth.getInstance()
+    private val database = AppDatabase.getDatabase(application)
+    private val repository = ListingRepository(database.listingDao())
 
     private val _listings = MutableLiveData<List<Listing>>()
     val listings: LiveData<List<Listing>> = _listings
@@ -34,29 +35,31 @@ class MyListingsViewModel : ViewModel() {
     val timerPulse: LiveData<Long> = _timerPulse
 
     private var refreshJob: Job? = null
-    private var listingsListener: ListenerRegistration? = null
+    private var observationJob: Job? = null
 
     fun startListening() {
-        val uid = auth.currentUser?.uid ?: return
+        val uid = repository.getCurrentUserUid() ?: return
         
         stopListening()
         _isLoading.value = true
-        
-        listingsListener = repository.getFirestoreInstance()
-            .collection("listings")
-            .whereEqualTo("createdByUid", uid)
-            .addSnapshotListener { snapshot, e ->
-                _isLoading.value = false
-                if (e != null) return@addSnapshotListener
-                
-                val allListings = snapshot?.toObjects(Listing::class.java) ?: emptyList()
+
+        // 1. Refresh from network (Rule: Local and Remote storage)
+        viewModelScope.launch {
+            repository.refreshUserListings(uid)
+            _isLoading.value = false
+        }
+
+        // 2. Observe from Room (Single Source of Truth)
+        observationJob = viewModelScope.launch {
+            repository.observeUserListings(uid).collectLatest { allListings ->
                 updateCountsAndListings(allListings)
             }
+        }
     }
 
     fun stopListening() {
-        listingsListener?.remove()
-        listingsListener = null
+        observationJob?.cancel()
+        observationJob = null
     }
 
     private fun updateCountsAndListings(allListings: List<Listing>) {

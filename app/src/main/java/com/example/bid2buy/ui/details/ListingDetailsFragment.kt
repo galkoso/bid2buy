@@ -67,7 +67,8 @@ class ListingDetailsFragment : Fragment() {
                 listingId = listing.id,
                 currentHighestBid = listing.currentHighestBid ?: 0.0,
                 startingPrice = listing.startingPrice,
-                bidCount = listing.bidCount
+                bidCount = listing.bidCount,
+                listingCurrency = listing.currency
             )
             bottomSheet.show(parentFragmentManager, PlaceBidBottomSheetFragment.TAG)
         }

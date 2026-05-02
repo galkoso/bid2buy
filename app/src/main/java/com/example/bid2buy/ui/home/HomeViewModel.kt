@@ -11,7 +11,6 @@ import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.CurrencyManager
 import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -20,8 +19,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
-    private val firestore = FirebaseFirestore.getInstance()
-    private val repository = ListingRepository(firestore, database.listingDao())
+    private val repository = ListingRepository(database.listingDao())
     private val currencyManager = CurrencyManager.getInstance(application)
     
     private val _listings = MutableLiveData<List<Listing>>()
@@ -153,8 +151,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun getFilteredList(): List<Listing> {
-        // Manual closingAt time-check removed as the database now handles this.
-        var filteredList = lastFetchedListings
+        val now = TimeUtils.currentTimeMillis()
+        
+        // Manual closingAt time-check re-added to ensure items vanish exactly when timer hits zero.
+        var filteredList = lastFetchedListings.filter { 
+            it.closingAt?.toDate()?.time ?: 0 > now 
+        }
 
         currentSearchQuery?.let { query ->
             filteredList = filteredList.filter {
@@ -175,7 +177,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val basePrice = if (listing.bidCount > 0) listing.currentHighestBid ?: listing.startingPrice else listing.startingPrice
                 
                 // For filtering, we stick to the base currency (₪/ILS) logic to keep it consistent
-                // Given the instructions, we keep "Under ₪100" as a label but we can apply it to the base price.
                 when (range) {
                     "Under ₪100" -> basePrice < 100
                     "₪100 - ₪500" -> basePrice in 100.0..500.0

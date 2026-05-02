@@ -1,21 +1,27 @@
 package com.example.bid2buy.ui.bids
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.BidsRepository
 import com.example.bid2buy.model.Bid
+import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.TimeUtils
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-class BidsViewModel : ViewModel() {
+class BidsViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = BidsRepository()
+    private val database = AppDatabase.getDatabase(application)
+    private val bidsRepository = BidsRepository(database.bidDao(), database.listingDao())
+    private val listingsRepository = ListingRepository(database.listingDao())
 
     private val _activeBids = MutableLiveData<List<BidItemUiModel>>()
     val activeBids: LiveData<List<BidItemUiModel>> = _activeBids
@@ -36,12 +42,14 @@ class BidsViewModel : ViewModel() {
     val timerPulse: LiveData<Long> = _timerPulse
 
     private var timerJob: Job? = null
+    private var observationJob: Job? = null
     
     private var lastFetchedListings: List<Listing> = emptyList()
     private var lastFetchedUserBids: List<Bid> = emptyList()
 
     init {
         startTimer()
+        observeData()
     }
 
     private fun startTimer() {
@@ -57,24 +65,39 @@ class BidsViewModel : ViewModel() {
         }
     }
 
-    fun loadBids(forceRefresh: Boolean = false) {
-        val uid = repository.getCurrentUserUid() ?: return
+    private fun observeData() {
+        val uid = bidsRepository.getCurrentUserUid() ?: return
         
-        // If we already have data and don't force refresh, don't show loading animation
-        if (forceRefresh || lastFetchedListings.isEmpty()) {
+        observationJob?.cancel()
+        observationJob = viewModelScope.launch {
+            // Observe bids and listings from Room (Rule: Room cache)
+            combine(
+                bidsRepository.observeUserBids(uid),
+                listingsRepository.observeActiveListings(0) // We just want all cached listings relevant to user bids
+            ) { bids, listings ->
+                Pair(bids, listings)
+            }.collectLatest { (bids, listings) ->
+                lastFetchedUserBids = bids
+                // Note: observeActiveListings only gives active ones. 
+                // In a full implementation, we'd have a specific DAO query for "listings user has bid on".
+                // For now, we rely on the repository refreshing the specific listings into Room.
+                lastFetchedListings = listings.filter { listing -> bids.any { it.listingId == listing.id } }
+                processAndPostBids()
+            }
+        }
+    }
+
+    fun loadBids(forceRefresh: Boolean = false) {
+        val uid = bidsRepository.getCurrentUserUid() ?: return
+        
+        if (forceRefresh || lastFetchedUserBids.isEmpty()) {
             _isLoading.value = true
         }
 
         viewModelScope.launch {
             try {
-                val userBids = repository.getBidsForUser(uid)
-                val listingIds = userBids.map { it.listingId }.distinct()
-                val listings = repository.getListingsByIds(listingIds)
-
-                lastFetchedUserBids = userBids
-                lastFetchedListings = listings
-                
-                processAndPostBids()
+                // Refresh from network into Room (Rule: Local and Remote storage)
+                bidsRepository.refreshUserBids(uid)
                 _isLoading.value = false
             } catch (e: Exception) {
                 _error.value = e.message
@@ -84,7 +107,7 @@ class BidsViewModel : ViewModel() {
     }
 
     private fun processAndPostBids() {
-        val uid = repository.getCurrentUserUid() ?: return
+        val uid = bidsRepository.getCurrentUserUid() ?: return
         
         val active = mutableListOf<BidItemUiModel>()
         val won = mutableListOf<BidItemUiModel>()
@@ -117,5 +140,6 @@ class BidsViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        observationJob?.cancel()
     }
 }

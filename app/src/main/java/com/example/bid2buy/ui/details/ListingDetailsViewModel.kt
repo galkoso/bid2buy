@@ -1,22 +1,24 @@
 package com.example.bid2buy.ui.details
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bid2buy.data.local.AppDatabase
 import com.example.bid2buy.model.Listing
-import com.example.bid2buy.repositories.ListingsRepository
+import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.TimeUtils
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-class ListingDetailsViewModel : ViewModel() {
+class ListingDetailsViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = ListingsRepository()
+    private val database = AppDatabase.getDatabase(application)
+    private val repository = ListingRepository(database.listingDao())
 
     private val _listing = MutableLiveData<Listing?>()
     val listing: LiveData<Listing?> = _listing
@@ -49,22 +51,26 @@ class ListingDetailsViewModel : ViewModel() {
     val timeRemaining: LiveData<String> = _timeRemaining
 
     private var timerJob: Job? = null
+    private var observationJob: Job? = null
 
     fun loadListing(listingId: String) {
         _isLoading.value = true
+        
+        // 1. Refresh from network (Rule: Local and Remote storage)
         viewModelScope.launch {
-            try {
-                repository.getListing(listingId).collectLatest { listing ->
-                    _listing.value = listing
-                    _isLoading.value = false
-                    if (listing != null) {
-                        updatePermissions(listing)
-                        startTimer(listing)
-                    }
+            repository.refreshListing(listingId)
+            _isLoading.value = false
+        }
+
+        // 2. Observe from Room (Single Source of Truth)
+        observationJob?.cancel()
+        observationJob = viewModelScope.launch {
+            repository.observeListing(listingId).collectLatest { listing ->
+                _listing.value = listing
+                if (listing != null) {
+                    updatePermissions(listing)
+                    startTimer(listing)
                 }
-            } catch (e: Exception) {
-                _error.value = e.message
-                _isLoading.value = false
             }
         }
     }
@@ -128,5 +134,6 @@ class ListingDetailsViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        observationJob?.cancel()
     }
 }
