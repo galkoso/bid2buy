@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentEditProfileBinding
 import com.example.bid2buy.model.UserProfile
 import kotlinx.coroutines.flow.collectLatest
@@ -65,15 +66,14 @@ class EditProfileFragment : Fragment() {
                 type = "image/*"
                 addCategory(Intent.CATEGORY_OPENABLE)
             }
-            imagePickerLauncher.launch(Intent.createChooser(intent, "Select Photo"))
+            imagePickerLauncher.launch(Intent.createChooser(intent, getString(R.string.select_photo)))
         }
 
         binding.btnSaveChanges.setOnClickListener {
             viewModel.saveProfile(
-                binding.etDisplayName.text.toString(),
-                binding.etEmail.text.toString(),
-                binding.etLocation.text.toString(),
-                selectedImageUri
+                displayName = binding.etDisplayName.text.toString(),
+                location = binding.etLocation.text.toString(),
+                imageUri = selectedImageUri
             )
         }
 
@@ -94,11 +94,11 @@ class EditProfileFragment : Fragment() {
                 launch {
                     viewModel.isLoading.collectLatest { isLoading ->
                         if (isLoading) {
-                            binding.btnSaveChanges.text = "Saving..."
+                            binding.btnSaveChanges.setText(R.string.saving)
                             binding.btnSaveChanges.isEnabled = false
                             binding.loadingOverlay.visibility = View.VISIBLE
                         } else {
-                            binding.btnSaveChanges.text = "Save Changes"
+                            binding.btnSaveChanges.setText(R.string.save_changes)
                             binding.btnSaveChanges.isEnabled = true
                             binding.loadingOverlay.visibility = View.GONE
                         }
@@ -108,7 +108,7 @@ class EditProfileFragment : Fragment() {
                 launch {
                     viewModel.saveSuccess.collectLatest { success ->
                         if (success) {
-                            Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), R.string.profile_updated_success, Toast.LENGTH_SHORT).show()
                             findNavController().navigateUp()
                         }
                     }

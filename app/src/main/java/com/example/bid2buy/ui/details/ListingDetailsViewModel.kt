@@ -13,6 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class ListingDetailsViewModel(application: Application) : AndroidViewModel(application) {
@@ -23,28 +24,25 @@ class ListingDetailsViewModel(application: Application) : AndroidViewModel(appli
     private val _listing = MutableLiveData<Listing?>()
     val listing: LiveData<Listing?> = _listing
 
-    private val _isLoading = MutableLiveData<Boolean>(false)
-    val isLoading: LiveData<Boolean> = _isLoading
-
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
 
-    private val _isOwner = MutableLiveData<Boolean>(false)
+    private val _isOwner = MutableLiveData(false)
     val isOwner: LiveData<Boolean> = _isOwner
 
-    private val _isSignedIn = MutableLiveData<Boolean>(false)
+    private val _isSignedIn = MutableLiveData(false)
     val isSignedIn: LiveData<Boolean> = _isSignedIn
 
-    private val _canEdit = MutableLiveData<Boolean>(false)
+    private val _canEdit = MutableLiveData(false)
     val canEdit: LiveData<Boolean> = _canEdit
 
-    private val _canDelete = MutableLiveData<Boolean>(false)
+    private val _canDelete = MutableLiveData(false)
     val canDelete: LiveData<Boolean> = _canDelete
 
-    private val _canBid = MutableLiveData<Boolean>(false)
+    private val _canBid = MutableLiveData(false)
     val canBid: LiveData<Boolean> = _canBid
 
-    private val _isClosed = MutableLiveData<Boolean>(false)
+    private val _isClosed = MutableLiveData(false)
     val isClosed: LiveData<Boolean> = _isClosed
 
     private val _timeRemaining = MutableLiveData<String>()
@@ -54,15 +52,10 @@ class ListingDetailsViewModel(application: Application) : AndroidViewModel(appli
     private var observationJob: Job? = null
 
     fun loadListing(listingId: String) {
-        _isLoading.value = true
-        
-        // 1. Refresh from network (Rule: Local and Remote storage)
         viewModelScope.launch {
             repository.refreshListing(listingId)
-            _isLoading.value = false
         }
 
-        // 2. Observe from Room (Single Source of Truth)
         observationJob?.cancel()
         observationJob = viewModelScope.launch {
             repository.observeListing(listingId).collectLatest { listing ->
@@ -94,7 +87,7 @@ class ListingDetailsViewModel(application: Application) : AndroidViewModel(appli
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60
                 
-                _timeRemaining.value = String.format("%02dh %02dm %02ds", hours, minutes, seconds)
+                _timeRemaining.value = String.format(Locale.getDefault(), "%02dh %02dm %02ds", hours, minutes, seconds)
                 
                 delay(1000)
             }

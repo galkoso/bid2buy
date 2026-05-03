@@ -3,12 +3,11 @@ package com.example.bid2buy
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
-import android.view.Gravity
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.bid2buy.databinding.ActivitySignupBinding
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
 class SignupActivity : AppCompatActivity() {
@@ -42,26 +41,26 @@ class SignupActivity : AppCompatActivity() {
         val confirmPassword = binding.confirmPasswordEditText.text.toString().trim()
 
         if (displayName.isEmpty()) {
-            binding.displayNameEditText.error = "Display name is required"
-            showErrorToast("Please enter a display name")
+            binding.displayNameEditText.error = getString(R.string.error_display_name_required)
+            showError(getString(R.string.error_enter_display_name))
             return
         }
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailEditText.error = "Invalid email"
-            showErrorToast("Please enter a valid email address")
+            binding.emailEditText.error = getString(R.string.error_invalid_email)
+            showError(getString(R.string.error_enter_valid_email))
             return
         }
 
         if (!isValidPassword(password)) {
-            binding.passwordEditText.error = "Invalid password"
-            showErrorToast("Password must be at least 8 characters, with 1 uppercase, 1 number, and 1 special character")
+            binding.passwordEditText.error = getString(R.string.error_invalid_password)
+            showError(getString(R.string.error_password_criteria))
             return
         }
 
         if (password != confirmPassword) {
-            binding.confirmPasswordEditText.error = "Passwords do not match"
-            showErrorToast("Passwords do not match")
+            binding.confirmPasswordEditText.error = getString(R.string.error_passwords_dont_match)
+            showError(getString(R.string.error_passwords_dont_match))
             return
         }
 
@@ -70,7 +69,7 @@ class SignupActivity : AppCompatActivity() {
             if (result.isSuccess) {
                 navigateToMain()
             } else {
-                showErrorToast("Signup failed: ${result.exceptionOrNull()?.message ?: "Unknown error"}")
+                showError(getString(R.string.error_signup_failed, result.exceptionOrNull()?.message ?: "Unknown error"))
             }
         }
     }
@@ -80,15 +79,11 @@ class SignupActivity : AppCompatActivity() {
         return password.matches(passwordPattern.toRegex())
     }
 
-    private fun showErrorToast(message: String) {
-        val layout = layoutInflater.inflate(R.layout.custom_error_toast, findViewById(R.id.custom_toast_container))
-        layout.findViewById<TextView>(R.id.toast_text).text = message
-
-        val toast = Toast(applicationContext)
-        toast.duration = Toast.LENGTH_SHORT
-        toast.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
-        toast.view = layout
-        toast.show()
+    private fun showError(message: String) {
+        val snackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+        snackbar.view.background = ContextCompat.getDrawable(this, R.drawable.toast_background)
+        snackbar.setTextColor(ContextCompat.getColor(this, R.color.white))
+        snackbar.show()
     }
 
     private fun navigateToMain() {

@@ -2,6 +2,7 @@ package com.example.bid2buy.ui.profile
 
 import android.app.Application
 import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bid2buy.data.local.AppDatabase
@@ -63,7 +64,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             loadTotalBidsCount(uid)
             setupSuccessRateCalculation()
             
-            // Sync data from Firestore to local cache
             viewModelScope.launch {
                 bidsRepository.refreshUserBids(uid)
             }
@@ -94,7 +94,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 firestoreUserRepository.observeActiveListingsCount(uid).collectLatest { count ->
                     _activeListingsCount.value = count
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _activeListingsCount.value = _userProfile.value?.activeListingsCount ?: 0
             }
         }
@@ -106,7 +106,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 bidsRepository.observeActiveBidsCount(uid).collectLatest { count ->
                     _activeBidsCount.value = count
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _activeBidsCount.value = _userProfile.value?.activeBidsCount ?: 0
             }
         }
@@ -118,7 +118,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 bidsRepository.observeWinsCount(uid).collectLatest { count ->
                     _winsCount.value = count
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _winsCount.value = 0
             }
         }
@@ -130,7 +130,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 firestoreUserRepository.observeTotalItemsSold(uid).collectLatest { count ->
                     _totalItemsSold.value = count
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _totalItemsSold.value = 0
             }
         }
@@ -142,7 +142,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 bidsRepository.observeTotalBidsCount(uid).collectLatest { count ->
                     _totalBidsCount.value = count
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _totalBidsCount.value = 0
             }
         }
@@ -159,7 +159,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun selectCurrency(currencyCode: String) {
-        sharedPrefs.edit().putString("selected_currency", currencyCode).apply()
+        sharedPrefs.edit { putString("selected_currency", currencyCode) }
         _selectedCurrency.value = currencyCode
     }
 

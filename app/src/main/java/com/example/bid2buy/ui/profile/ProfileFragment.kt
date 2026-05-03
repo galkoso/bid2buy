@@ -55,9 +55,9 @@ class ProfileFragment : Fragment() {
 
     private fun setupGuestUI() {
         hideShimmer()
-        binding.userName.text = "Guest User"
-        binding.userEmail.text = "Login to see your profile"
-        binding.userInitials.text = "GU"
+        binding.userName.text = getString(R.string.guest_user)
+        binding.userEmail.text = getString(R.string.guest_email_subtitle)
+        binding.userInitials.text = getString(R.string.guest_initials)
         binding.userInitials.visibility = View.VISIBLE
         binding.profileImage.visibility = View.GONE
 
@@ -84,9 +84,9 @@ class ProfileFragment : Fragment() {
         binding.currencySection.isEnabled = false
         binding.currencySection.alpha = grayAlpha
 
-        binding.memberSince.text = "N/A"
-        binding.totalItemsSold.text = "0"
-        binding.successRate.text = "0%"
+        binding.memberSince.text = getString(R.string.time_left_na)
+        binding.totalItemsSold.text = getString(R.string.zero)
+        binding.successRate.text = getString(R.string.zero_percent)
         
         binding.logoutSection.setOnClickListener {
             handleLogout()
@@ -107,7 +107,7 @@ class ProfileFragment : Fragment() {
 
                 launch {
                     viewModel.successRate.collectLatest { rate ->
-                        binding.successRate.text = "$rate%"
+                        binding.successRate.text = getString(R.string.percent_format, rate)
                     }
                 }
 
@@ -178,7 +178,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun updateUI(profile: UserProfile) {
-        binding.userName.text = profile.displayName.ifEmpty { "Anonymous User" }
+        binding.userName.text = profile.displayName.ifEmpty { getString(R.string.anonymous_user) }
         binding.userEmail.text = profile.email
         
         if (profile.photoURL.isNotEmpty()) {
@@ -217,7 +217,7 @@ class ProfileFragment : Fragment() {
 
         binding.editProfileBtn.setOnClickListener {
             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to edit your profile.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.no_internet_profile_edit_error), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             findNavController().navigate(ProfileFragmentDirections.actionNavigationProfileToEditProfileFragment())

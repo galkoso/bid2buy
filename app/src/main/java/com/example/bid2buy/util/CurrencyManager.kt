@@ -1,6 +1,7 @@
 package com.example.bid2buy.util
 
 import android.content.Context
+import androidx.core.content.edit
 import com.example.bid2buy.BuildConfig
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
@@ -11,6 +12,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 data class ExchangeRateResponse(
@@ -74,29 +76,18 @@ class CurrencyManager private constructor(context: Context) {
                 cachedRates = response.conversionRates
                 lastFetchTime = currentTime
                 
-                sharedPrefs.edit()
-                    .putString("cached_rates", Gson().toJson(cachedRates))
-                    .putLong("last_fetch_time", lastFetchTime)
-                    .apply()
+                sharedPrefs.edit {
+                    putString("cached_rates", Gson().toJson(cachedRates))
+                    putLong("last_fetch_time", lastFetchTime)
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) { }
     }
 
-    fun getRates(): Map<String, Double>? = cachedRates
-
-    /**
-     * Converts an amount from one currency to another using the cached rates.
-     * @param amount The value to convert.
-     * @param fromCurrency The source currency code (e.g., "USD").
-     * @param toCurrency The target currency code (e.g., "EUR").
-     */
     fun convert(amount: Double, fromCurrency: String, toCurrency: String): Double {
         if (fromCurrency == toCurrency) return amount
         val rates = cachedRates ?: return amount
         
-        // 1. Convert from source currency to base currency (ILS)
         val amountInBase = if (fromCurrency == baseCurrency) {
             amount
         } else {
@@ -104,7 +95,6 @@ class CurrencyManager private constructor(context: Context) {
             amount / fromRate
         }
         
-        // 2. Convert from base currency to target currency
         return if (toCurrency == baseCurrency) {
             amountInBase
         } else {
@@ -129,7 +119,7 @@ class CurrencyManager private constructor(context: Context) {
             "CHF" -> "CHF"
             else -> currencyCode
         }
-        return String.format("%.2f %s", amount, symbol)
+        return String.format(Locale.getDefault(), "%.2f %s", amount, symbol)
     }
 
     companion object {

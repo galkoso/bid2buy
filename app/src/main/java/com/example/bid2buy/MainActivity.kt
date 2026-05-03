@@ -1,7 +1,6 @@
 package com.example.bid2buy
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -13,7 +12,6 @@ import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.NetworkUtils
 import com.example.bid2buy.util.TimeUtils
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -26,11 +24,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Sync time with server and perform maintenance
         lifecycleScope.launch {
             TimeUtils.syncTime()
             
-            // Rule: Local and Remote storage
             val database = AppDatabase.getDatabase(applicationContext)
             val repository = ListingRepository(database.listingDao())
             repository.cleanupOldListings()
