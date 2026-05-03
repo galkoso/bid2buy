@@ -19,8 +19,6 @@ data class Listing(
     val createdByName: String = "Seller",
     val photoUrls: List<String> = emptyList(),
     val status: String = "ACTIVE",
-    
-    // Bid related fields
     val currentHighestBid: Double? = null,
     val highestBidderUid: String? = null,
     val highestBidderName: String? = null,

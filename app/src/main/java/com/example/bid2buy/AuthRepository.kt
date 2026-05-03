@@ -9,8 +9,6 @@ import kotlinx.coroutines.tasks.await
 class AuthRepository {
     private val firebaseAuth = FirebaseAuth.getInstance()
     private val firestoreUserRepository = FirestoreUserRepository()
-    val currentUser: FirebaseUser?
-        get() = firebaseAuth.currentUser
 
     suspend fun signUp(email: String, password: String, displayName: String): Result<FirebaseUser> {
         return try {

@@ -18,7 +18,6 @@ class BidsFragment : Fragment() {
     private var _binding: FragmentBidsBinding? = null
     private val binding get() = _binding!!
     
-    // Use activityViewModels to persist data across navigations and prevent flickering
     private val viewModel: BidsViewModel by activityViewModels()
     private val args: BidsFragmentArgs by navArgs()
     private lateinit var adapter: BidsAdapter
@@ -37,7 +36,6 @@ class BidsFragment : Fragment() {
         
         setupRecyclerView()
         
-        // Select the tab immediately to avoid flickering from the default tab
         val initialTab = args.initialTab
         if (initialTab in 0..2) {
             binding.tabLayout.getTabAt(initialTab)?.select()
@@ -47,7 +45,6 @@ class BidsFragment : Fragment() {
         setupObservers()
         setupSwipeRefresh()
 
-        // Populate the list immediately with cached data if available
         updateListForTab(initialTab)
     }
 
@@ -86,7 +83,6 @@ class BidsFragment : Fragment() {
         adapter.submitList(list)
         
         if (list.isEmpty()) {
-            // Only show empty state if we're not currently loading data for the first time
             if (viewModel.isLoading.value != true) {
                 binding.emptyState.visibility = View.VISIBLE
                 binding.emptyState.text = when (position) {
@@ -125,7 +121,6 @@ class BidsFragment : Fragment() {
         
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             if (isLoading) {
-                // Show ProgressBar if this is the first load and we aren't swiping to refresh
                 if (!binding.swipeRefresh.isRefreshing && adapter.itemCount == 0) {
                     binding.progressBar.visibility = View.VISIBLE
                     binding.emptyState.visibility = View.GONE
@@ -133,7 +128,6 @@ class BidsFragment : Fragment() {
             } else {
                 binding.swipeRefresh.isRefreshing = false
                 binding.progressBar.visibility = View.GONE
-                // Trigger empty state check now that loading is finished
                 updateListForTab(binding.tabLayout.selectedTabPosition)
             }
         }

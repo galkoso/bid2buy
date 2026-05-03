@@ -51,7 +51,7 @@ class CreateListingFragment : Fragment() {
                 selectedImageUris.add(it)
                 renderPhotos()
             } else {
-                Toast.makeText(requireContext(), "Maximum 10 photos allowed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.max_photos_error), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -83,7 +83,7 @@ class CreateListingFragment : Fragment() {
     }
 
     private fun updatePhotoCount() {
-        binding.tvPhotoCount.text = "${selectedImageUris.size} / 10 photos selected"
+        binding.tvPhotoCount.text = getString(R.string.photo_count_format, selectedImageUris.size)
     }
 
     override fun onCreateView(
@@ -113,12 +113,12 @@ class CreateListingFragment : Fragment() {
                     when (state) {
                         is CreateListingState.Loading -> {
                             binding.btnPublish.isEnabled = false
-                            binding.btnPublish.text = "Publishing..."
+                            binding.btnPublish.text = getString(R.string.publishing)
                         }
                         is CreateListingState.Success -> {
                             binding.btnPublish.isEnabled = true
                             binding.btnPublish.text = getString(R.string.publish_listing)
-                            Toast.makeText(requireContext(), "Listing published successfully!", Toast.LENGTH_LONG).show()
+                            Toast.makeText(requireContext(), getString(R.string.listing_published_success), Toast.LENGTH_LONG).show()
                             findNavController().navigateUp()
                         }
                         is CreateListingState.Error -> {
@@ -147,7 +147,7 @@ class CreateListingFragment : Fragment() {
 
         binding.btnPublish.setOnClickListener {
             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to publish your listing.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.no_internet_error), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -177,33 +177,33 @@ class CreateListingFragment : Fragment() {
 
     private fun validateInputs(): Boolean {
         if (binding.etTitle.text.toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Title is required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.title_required), Toast.LENGTH_SHORT).show()
             return false
         }
         
         if (selectedImageUris.isEmpty()) {
-            Toast.makeText(requireContext(), "Please select at least one photo", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.photo_required), Toast.LENGTH_SHORT).show()
             return false
         }
 
         val now = Calendar.getInstance()
         if (selectedDateTime.before(now)) {
-            Toast.makeText(requireContext(), "Closing time must be in the future", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.future_time_error), Toast.LENGTH_SHORT).show()
             return false
         }
         
         if (binding.autoCategory.text.isEmpty()) {
-            Toast.makeText(requireContext(), "Please select a category", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.category_required), Toast.LENGTH_SHORT).show()
             return false
         }
 
         if (binding.autoCondition.text.isEmpty()) {
-            Toast.makeText(requireContext(), "Please select a condition", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.condition_required), Toast.LENGTH_SHORT).show()
             return false
         }
 
         if (binding.etLocation.text.toString().trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Location is required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.location_required), Toast.LENGTH_SHORT).show()
             return false
         }
 
@@ -221,8 +221,8 @@ class CreateListingFragment : Fragment() {
         val conditionAdapter = SelectionAwareAdapter(requireContext(), R.layout.dropdown_item, conditions, binding.autoCondition)
         binding.autoCondition.setAdapter(conditionAdapter)
         
-        binding.autoCategory.setDropDownVerticalOffset(10)
-        binding.autoCondition.setDropDownVerticalOffset(10)
+        binding.autoCategory.dropDownVerticalOffset = 10
+        binding.autoCondition.dropDownVerticalOffset = 10
     }
 
     private fun setupInputs() {
@@ -230,7 +230,7 @@ class CreateListingFragment : Fragment() {
             if (selectedImageUris.size < 10) {
                 getImage.launch("image/*")
             } else {
-                Toast.makeText(requireContext(), "Maximum 10 photos reached", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.max_photos_error), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -245,7 +245,7 @@ class CreateListingFragment : Fragment() {
                     tempCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
 
                     if (tempCalendar.before(currentCalendar)) {
-                        Toast.makeText(requireContext(), "Closing time must be in the future", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.future_time_error), Toast.LENGTH_SHORT).show()
                         selectedDateTime = Calendar.getInstance().apply { 
                             add(Calendar.HOUR_OF_DAY, 1)
                             set(Calendar.SECOND, 0)
@@ -277,7 +277,7 @@ class CreateListingFragment : Fragment() {
                     tempCalendar.set(Calendar.MINUTE, minute)
                     
                     if (tempCalendar.before(Calendar.getInstance())) {
-                        Toast.makeText(requireContext(), "Closing time must be in the future", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), getString(R.string.future_time_error), Toast.LENGTH_SHORT).show()
                     } else {
                         selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay)
                         selectedDateTime.set(Calendar.MINUTE, minute)
@@ -294,17 +294,17 @@ class CreateListingFragment : Fragment() {
 
     private fun setupPriceControls() {
         val currentCurrency = currencyManager.getSelectedCurrency()
-        binding.tvPriceLabel.text = "Starting Price ($currentCurrency) *"
+        binding.tvPriceLabel.text = getString(R.string.starting_price_label_format, currentCurrency)
 
         binding.ivPriceUp.setOnClickListener {
             val currentPrice = binding.etPrice.text.toString().toIntOrNull() ?: 0
-            binding.etPrice.setText((currentPrice + 1).toString())
+            binding.etPrice.setText(getString(R.string.number_format, currentPrice + 1))
         }
 
         binding.ivPriceDown.setOnClickListener {
             val currentPrice = binding.etPrice.text.toString().toIntOrNull() ?: 0
             if (currentPrice > 0) {
-                binding.etPrice.setText((currentPrice - 1).toString())
+                binding.etPrice.setText(getString(R.string.number_format, currentPrice - 1))
             }
         }
     }

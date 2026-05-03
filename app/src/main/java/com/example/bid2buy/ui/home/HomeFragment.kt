@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.CheckedTextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -33,8 +34,7 @@ class HomeFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
-
+        homeViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
@@ -62,7 +62,7 @@ class HomeFragment : Fragment() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 
-                if (dy > 0) { // scrolling down
+                if (dy > 0) {
                     val visibleItemCount = layoutManager.childCount
                     val totalItemCount = layoutManager.itemCount
                     val pastVisibleItems = layoutManager.findFirstVisibleItemPosition()
@@ -89,12 +89,12 @@ class HomeFragment : Fragment() {
 
     private fun setupSearchButton() {
         binding.ivSearch.setOnClickListener {
-            if (binding.llSearchContainer.visibility == View.VISIBLE) {
-                binding.llSearchContainer.visibility = View.GONE
+            if (binding.llSearchContainer.isVisible) {
+                binding.llSearchContainer.isVisible = false
                 binding.etSearch.text?.clear()
                 homeViewModel.setSearchQuery(null)
             } else {
-                binding.llSearchContainer.visibility = View.VISIBLE
+                binding.llSearchContainer.isVisible = true
                 binding.etSearch.requestFocus()
             }
         }
@@ -177,22 +177,15 @@ class HomeFragment : Fragment() {
     private fun observeViewModel() {
         homeViewModel.listings.observe(viewLifecycleOwner) { listings ->
             adapter.submitList(listings)
-            binding.tvItemCount.text = "${listings.size} items"
+            binding.tvItemCount.text = getString(R.string.item_count_format, listings.size)
         }
 
         homeViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // Stop refresh spinner when loading is done
             if (!isLoading) {
                 binding.swipeRefresh.isRefreshing = false
             }
-            
-            // Only show central progress bar if we aren't using swipe-to-refresh
             val showProgressBar = isLoading && !binding.swipeRefresh.isRefreshing
-            binding.progressBar.visibility = if (showProgressBar) View.VISIBLE else View.GONE
-        }
-
-        homeViewModel.isPaginating.observe(viewLifecycleOwner) { isPaginating ->
-            // In a real app, you might show a small footer loader here
+            binding.progressBar.isVisible = showProgressBar
         }
     }
 

@@ -7,11 +7,9 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
@@ -41,19 +39,9 @@ class FirestoreUserRepository(
         }
     }
 
-    fun observeUser(uid: String): Flow<UserProfile?> {
-        val userFlow = MutableStateFlow<UserProfile?>(null)
-        usersCollection.document(uid).addSnapshotListener { snapshot, _ ->
-            snapshot?.let {
-                userFlow.value = it.toObject<UserProfile>()
-            }
-        }
-        return userFlow
-    }
-
     suspend fun refreshUser(uid: String): UserProfile? {
         val userDoc = usersCollection.document(uid).get().await()
-        return userDoc.toObject<UserProfile>()
+        return userDoc.toObject(UserProfile::class.java)
     }
 
     suspend fun updateUserProfile(
@@ -65,11 +53,11 @@ class FirestoreUserRepository(
         photoURL: String? = null
     ) {
         val userListings = listingsCollection.whereEqualTo("createdByUid", uid).get().await()
-        val biddedListings = listingsCollection.whereEqualTo("highestBidderUid", uid).get().await()
+        val bidListings = listingsCollection.whereEqualTo("highestBidderUid", uid).get().await()
 
         firestore.runTransaction { transaction ->
             val userRef = usersCollection.document(uid)
-            val updates = mutableMapOf<String, Any>(
+            val updates = mutableMapOf(
                 "displayName" to displayName,
                 "phoneNumber" to phoneNumber,
                 "location" to location,
@@ -83,7 +71,7 @@ class FirestoreUserRepository(
                 transaction.update(doc.reference, "createdByName", displayName)
             }
 
-            biddedListings.documents.forEach { doc ->
+            bidListings.documents.forEach { doc ->
                 transaction.update(doc.reference, "highestBidderName", displayName)
             }
             null
@@ -101,9 +89,8 @@ class FirestoreUserRepository(
         return storageRef.downloadUrl.await().toString()
     }
 
-    fun observeActiveListingsCount(uid: String): Flow<Int> {
-        val countFlow = MutableStateFlow(0)
-        listingsCollection
+    fun observeActiveListingsCount(uid: String): Flow<Int> = callbackFlow {
+        val listener = listingsCollection
             .whereEqualTo("createdByUid", uid)
             .whereEqualTo("status", "ACTIVE")
             .addSnapshotListener { snapshot, _ ->
@@ -112,10 +99,10 @@ class FirestoreUserRepository(
                     val activeCount = querySnapshot.toObjects(Listing::class.java).count { listing ->
                         listing.closingAt != null && listing.closingAt.toDate().time > now.toDate().time
                     }
-                    countFlow.value = activeCount
+                    trySend(activeCount)
                 }
             }
-        return countFlow
+        awaitClose { listener.remove() }
     }
 
     fun observeTotalItemsSold(uid: String): Flow<Int> = callbackFlow {

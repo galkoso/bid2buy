@@ -31,16 +31,16 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
     ) : RecyclerView.ViewHolder(binding.root) {
         
         fun bind(listing: Listing) {
+            val context = binding.root.context
             binding.root.setOnClickListener { onItemClick(listing) }
             
             binding.tvTitle.text = listing.title
             binding.tvLocation.text = listing.location
             binding.tvCondition.text = listing.condition.lowercase()
             
-            val currencyManager = CurrencyManager.getInstance(binding.root.context)
+            val currencyManager = CurrencyManager.getInstance(context)
             val targetCurrency = currencyManager.getSelectedCurrency()
             
-            // Get original price and its currency from the listing object
             val originalPrice = if (listing.bidCount > 0) {
                 listing.currentHighestBid ?: listing.startingPrice
             } else {
@@ -48,11 +48,10 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
             }
             val originalCurrency = listing.currency
 
-            // Convert from original currency to the user's selected currency
             val convertedPrice = currencyManager.convert(originalPrice, originalCurrency, targetCurrency)
             binding.tvPrice.text = currencyManager.formatPrice(convertedPrice, targetCurrency)
             
-            binding.tvBidsCount.text = "${listing.bidCount} bids"
+            binding.tvBidsCount.text = context.getString(R.string.bids_count_format, listing.bidCount)
             binding.ivGraph.visibility = if (listing.bidCount > 0) View.VISIBLE else View.GONE
 
             val now = TimeUtils.now()
@@ -63,16 +62,16 @@ class MyListingsAdapter(private val onItemClick: (Listing) -> Unit) : ListAdapte
                 if (diff > 0) {
                     val hours = TimeUnit.MILLISECONDS.toHours(diff)
                     val minutes = (TimeUnit.MILLISECONDS.toMinutes(diff) % 60)
-                    binding.tvTimeLeft.text = "${hours}h ${minutes}m"
-                    binding.tvStatus.text = "Active"
+                    binding.tvTimeLeft.text = context.getString(R.string.time_left_format, hours, minutes)
+                    binding.tvStatus.text = context.getString(R.string.status_active)
                     binding.tvStatus.setBackgroundResource(R.drawable.bg_status_active)
                 } else {
-                    binding.tvTimeLeft.text = "Closed"
-                    binding.tvStatus.text = "Closed"
+                    binding.tvTimeLeft.text = context.getString(R.string.time_left_closed)
+                    binding.tvStatus.text = context.getString(R.string.status_closed)
                     binding.tvStatus.setBackgroundResource(R.drawable.bg_status_closed)
                 }
             } else {
-                binding.tvTimeLeft.text = "N/A"
+                binding.tvTimeLeft.text = context.getString(R.string.time_left_na)
             }
 
             if (listing.photoUrls.isNotEmpty()) {

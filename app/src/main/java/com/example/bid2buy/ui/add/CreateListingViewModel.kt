@@ -62,13 +62,8 @@ class CreateListingViewModel(application: Application) : AndroidViewModel(applic
                 val listingId = withContext(Dispatchers.IO) {
                     val userProfile = userRepository.refreshUser(currentUserUid)
                     
-                    // Generate a new ID using a repository-like method or just let createListing handle it
-                    // I'll use the repository's firestore instance indirectly if I had a method, 
-                    // but since I don't want to expose firestore, I'll pass an empty ID to createListing
-                    // or I'll add a helper to repository.
-                    
                     val listing = Listing(
-                        id = "", // repository.createListing will handle ID generation if empty
+                        id = "",
                         title = title,
                         description = description,
                         category = category,
@@ -79,18 +74,11 @@ class CreateListingViewModel(application: Application) : AndroidViewModel(applic
                         closingAt = Timestamp(closingDate),
                         createdByUid = currentUserUid,
                         createdByName = userProfile?.displayName ?: "Seller",
-                        photoUrls = emptyList(), // Will be updated after upload
+                        photoUrls = emptyList(),
                         status = "ACTIVE"
                     )
 
-                    // Note: uploadImages requires a listingId. 
-                    // Let's modify the repo to generate an ID or handle this better.
-                    // For now, I'll use a placeholder or better, let's look at createListing in repo.
-                    
-                    // Actually, I'll use a small trick: 
-                    // I'll add a method to repo to get a new ID.
-                    
-                    val newId = listingsRepository.getFirestoreInstance().collection("listings").document().id
+                    val newId = listingsRepository.generateNewListingId()
                     val photoUrls = listingsRepository.uploadImages(urisToUpload, newId)
                     
                     val finalListing = listing.copy(id = newId, photoUrls = photoUrls)

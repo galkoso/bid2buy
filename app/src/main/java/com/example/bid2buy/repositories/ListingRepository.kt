@@ -43,7 +43,6 @@ class ListingRepository(
         }
     }
 
-
     suspend fun refreshActiveListings(limit: Long = 20): DocumentSnapshot? {
         try {
             val now = Timestamp.now()
@@ -58,11 +57,10 @@ class ListingRepository(
             val remoteListings = snapshot.toObjects(Listing::class.java)
             val entities = remoteListings.map { it.toEntity() }
             
-            // Use transaction to prevent UI flickering
             listingDao.replaceActiveListings(entities)
             
             return snapshot.documents.lastOrNull()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return null
         }
     }
@@ -87,7 +85,7 @@ class ListingRepository(
             listingDao.upsertListings(entities)
             
             return snapshot.documents.lastOrNull()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return null
         }
     }
@@ -99,9 +97,7 @@ class ListingRepository(
             remoteListing?.let {
                 listingDao.upsertListing(it.toEntity())
             }
-        } catch (e: Exception) {
-            // Log or handle error
-        }
+        } catch (_: Exception) { }
     }
 
     suspend fun refreshUserListings(uid: String) {
@@ -113,12 +109,8 @@ class ListingRepository(
             
             val remoteListings = snapshot.toObjects(Listing::class.java)
             listingDao.upsertListings(remoteListings.map { it.toEntity() })
-        } catch (e: Exception) {
-            // Log or handle error
-        }
+        } catch (_: Exception) { }
     }
-
-    // --- Mutation Methods (Firestore + Room Update) ---
 
     suspend fun uploadImages(imageUris: List<Uri>, listingId: String): List<String> = coroutineScope {
         val uid = auth.currentUser?.uid ?: throw Exception("User not authenticated")
@@ -161,7 +153,7 @@ class ListingRepository(
                 ?: throw Exception("Listing not found")
 
             val now = TimeUtils.now()
-            if (currentListing.closingAt != null && currentListing.closingAt.compareTo(now) < 0) {
+            if (currentListing.closingAt != null && currentListing.closingAt < now) {
                 throw Exception("The auction has already closed")
             }
 
@@ -176,7 +168,6 @@ class ListingRepository(
             transaction.update(docRef, updates)
         }.await()
         
-        // Refresh local cache after transaction
         refreshListing(listingId)
     }
 
@@ -184,7 +175,6 @@ class ListingRepository(
         val doc = firestore.collection("listings").document(listingId).get().await()
         val createdByUid = doc.getString("createdByUid") ?: return
         
-        // 1. Delete from Firebase Storage
         try {
             val storageRef = storage.reference
                 .child("listing_photos")
@@ -193,9 +183,8 @@ class ListingRepository(
             
             val listResult = storageRef.listAll().await()
             listResult.items.forEach { it.delete().await() }
-        } catch (e: Exception) { }
+        } catch (_: Exception) { }
 
-        // 2. Delete bids
         try {
             val bidsQuery = firestore.collection("bids")
                 .whereEqualTo("listingId", listingId)
@@ -207,12 +196,9 @@ class ListingRepository(
                 batch.delete(bidDoc.reference)
             }
             batch.commit().await()
-        } catch (e: Exception) { }
+        } catch (_: Exception) { }
 
-        // 3. Delete from Firestore
         firestore.collection("listings").document(listingId).delete().await()
-        
-        // 4. Delete from Room
         listingDao.deleteListing(listingId)
     }
 
@@ -231,9 +217,8 @@ class ListingRepository(
             for (document in oldListingsQuery.documents) {
                 deleteListing(document.id)
             }
-        } catch (e: Exception) { }
+        } catch (_: Exception) { }
     }
 
     fun getCurrentUserUid(): String? = auth.currentUser?.uid
-    fun getFirestoreInstance() = firestore
 }

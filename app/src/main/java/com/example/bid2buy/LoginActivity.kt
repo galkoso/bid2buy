@@ -3,12 +3,11 @@ package com.example.bid2buy
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
-import android.view.Gravity
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.bid2buy.databinding.ActivityLoginBinding
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
@@ -40,14 +39,14 @@ class LoginActivity : AppCompatActivity() {
         val password = binding.passwordEditText.text.toString().trim()
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailEditText.error = "Invalid email"
-            showErrorToast("Please enter a valid email address")
+            binding.emailEditText.error = getString(R.string.error_invalid_email)
+            showError(getString(R.string.error_enter_valid_email))
             return
         }
 
         if (password.isEmpty()) {
-            binding.passwordEditText.error = "Password is required"
-            showErrorToast("Password cannot be empty")
+            binding.passwordEditText.error = getString(R.string.error_password_required)
+            showError(getString(R.string.error_password_empty))
             return
         }
 
@@ -56,20 +55,16 @@ class LoginActivity : AppCompatActivity() {
             if (result.isSuccess) {
                 navigateToMain()
             } else {
-                showErrorToast("Incorrect mail or password")
+                showError(getString(R.string.error_login_failed))
             }
         }
     }
 
-    private fun showErrorToast(message: String) {
-        val layout = layoutInflater.inflate(R.layout.custom_error_toast, findViewById(R.id.custom_toast_container))
-        layout.findViewById<TextView>(R.id.toast_text).text = message
-
-        val toast = Toast(applicationContext)
-        toast.duration = Toast.LENGTH_SHORT
-        toast.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, 100)
-        toast.view = layout
-        toast.show()
+    private fun showError(message: String) {
+        val snackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+        snackbar.view.background = ContextCompat.getDrawable(this, R.drawable.toast_background)
+        snackbar.setTextColor(ContextCompat.getColor(this, R.color.white))
+        snackbar.show()
     }
 
     private fun navigateToMain() {

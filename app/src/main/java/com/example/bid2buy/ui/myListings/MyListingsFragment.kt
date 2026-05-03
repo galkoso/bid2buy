@@ -5,9 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.bid2buy.R
 import com.example.bid2buy.databinding.FragmentMyListingsBinding
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.Timestamp
@@ -17,14 +18,13 @@ class MyListingsFragment : Fragment() {
     private var _binding: FragmentMyListingsBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: MyListingsAdapter
-    private lateinit var viewModel: MyListingsViewModel
+    private val viewModel: MyListingsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewModel = ViewModelProvider(this).get(MyListingsViewModel::class.java)
         _binding = FragmentMyListingsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -63,14 +63,14 @@ class MyListingsFragment : Fragment() {
         }
 
         viewModel.activeCount.observe(viewLifecycleOwner) { count ->
-            binding.tabLayout.getTabAt(0)?.text = "Active ($count)"
+            binding.tabLayout.getTabAt(0)?.text = getString(R.string.active_with_count, count)
         }
 
         viewModel.closedCount.observe(viewLifecycleOwner) { count ->
-            binding.tabLayout.getTabAt(1)?.text = "Closed ($count)"
+            binding.tabLayout.getTabAt(1)?.text = getString(R.string.closed_with_count, count)
         }
 
-        viewModel.listings.observe(viewLifecycleOwner) { listings ->
+        viewModel.listings.observe(viewLifecycleOwner) {
             updateList()
         }
 
@@ -94,11 +94,9 @@ class MyListingsFragment : Fragment() {
         val now = Timestamp.now()
         
         val filteredListings = if (binding.tabLayout.selectedTabPosition == 0) {
-            // Sort Active: Soonest to close first (Ascending)
             allListings.filter { it.closingAt != null && it.closingAt.toDate().time > now.toDate().time }
                 .sortedBy { it.closingAt }
         } else {
-            // Sort Closed: Most recently closed first (Descending)
             allListings.filter { it.closingAt == null || it.closingAt.toDate().time <= now.toDate().time }
                 .sortedByDescending { it.closingAt }
         }

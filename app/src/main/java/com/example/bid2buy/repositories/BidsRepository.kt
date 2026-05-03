@@ -21,8 +21,6 @@ class BidsRepository(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
 
-    // --- Observation Methods (Room as Single Source of Truth) ---
-
     fun observeBidsForListing(listingId: String): Flow<List<Bid>> {
         return bidDao.getBidsForListing(listingId).map { entities ->
             entities.map { it.toDomain() }
@@ -39,9 +37,6 @@ class BidsRepository(
         return bidDao.getBidsCountByUser(uid)
     }
 
-    /**
-     * Observes the count of active listings the user has bid on.
-     */
     fun observeActiveBidsCount(uid: String): Flow<Int> {
         return combine(
             bidDao.getBidsByUser(uid),
@@ -52,13 +47,7 @@ class BidsRepository(
         }
     }
 
-    /**
-     * Observes the count of listings where the user is the highest bidder and the auction is closed.
-     */
     fun observeWinsCount(uid: String): Flow<Int> {
-        // Since we don't have a specific 'closed' listing observation in DAO yet, 
-        // we can observe all listings and filter. For compliance, we use the local cache.
-        // In a real app, you'd add a DAO method for this.
         return listingDao.getActiveListings(0).map { allCached ->
             val now = TimeUtils.currentTimeMillis()
             allCached.count { listing ->
@@ -69,8 +58,6 @@ class BidsRepository(
         }
     }
 
-    // --- Sync Methods (Firestore -> Room) ---
-
     suspend fun refreshBidsForListing(listingId: String) {
         try {
             val snapshot = firestore.collection("bids")
@@ -79,7 +66,7 @@ class BidsRepository(
                 .await()
             val remoteBids = snapshot.toObjects(Bid::class.java)
             bidDao.upsertBids(remoteBids.map { it.toEntity() })
-        } catch (e: Exception) { }
+        } catch (_: Exception) { }
     }
 
     suspend fun refreshUserBids(uid: String) {
@@ -95,7 +82,7 @@ class BidsRepository(
             if (listingIds.isNotEmpty()) {
                 refreshListingsByIds(listingIds)
             }
-        } catch (e: Exception) { }
+        } catch (_: Exception) { }
     }
 
     private suspend fun refreshListingsByIds(listingIds: List<String>) {
@@ -109,8 +96,6 @@ class BidsRepository(
         }
     }
 
-    // --- Mutation Methods ---
-
     suspend fun placeBid(listingId: String, amount: Double) {
         val uid = auth.currentUser?.uid ?: throw Exception("User not authenticated")
         val displayName = auth.currentUser?.displayName ?: "User"
@@ -123,7 +108,7 @@ class BidsRepository(
             val listing = snapshot.toObject(Listing::class.java) ?: throw Exception("Listing not found")
 
             val now = TimeUtils.now()
-            if (listing.closingAt != null && listing.closingAt.compareTo(now) < 0) {
+            if (listing.closingAt != null && listing.closingAt < now) {
                 throw Exception("This auction has already closed")
             }
             
@@ -164,5 +149,4 @@ class BidsRepository(
     }
 
     fun getCurrentUserUid(): String? = auth.currentUser?.uid
-    fun getFirestoreInstance() = firestore
 }

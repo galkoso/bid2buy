@@ -70,17 +70,13 @@ class BidsViewModel(application: Application) : AndroidViewModel(application) {
         
         observationJob?.cancel()
         observationJob = viewModelScope.launch {
-            // Observe bids and listings from Room (Rule: Room cache)
             combine(
                 bidsRepository.observeUserBids(uid),
-                listingsRepository.observeActiveListings(0) // We just want all cached listings relevant to user bids
+                listingsRepository.observeActiveListings(0)
             ) { bids, listings ->
                 Pair(bids, listings)
             }.collectLatest { (bids, listings) ->
                 lastFetchedUserBids = bids
-                // Note: observeActiveListings only gives active ones. 
-                // In a full implementation, we'd have a specific DAO query for "listings user has bid on".
-                // For now, we rely on the repository refreshing the specific listings into Room.
                 lastFetchedListings = listings.filter { listing -> bids.any { it.listingId == listing.id } }
                 processAndPostBids()
             }
@@ -96,7 +92,6 @@ class BidsViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                // Refresh from network into Room (Rule: Local and Remote storage)
                 bidsRepository.refreshUserBids(uid)
                 _isLoading.value = false
             } catch (e: Exception) {

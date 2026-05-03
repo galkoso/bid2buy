@@ -27,7 +27,6 @@ import com.example.bid2buy.model.Listing
 import com.example.bid2buy.repositories.ListingRepository
 import com.example.bid2buy.util.CurrencyManager
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -40,13 +39,11 @@ class EditListingFragment : Fragment() {
     private val viewModel: ListingDetailsViewModel by viewModels()
     private val args: EditListingFragmentArgs by navArgs()
     
-    // Updated to use the consolidated ListingRepository
     private lateinit var repository: ListingRepository
     private lateinit var currencyManager: CurrencyManager
 
     private var selectedDateTime: Calendar = Calendar.getInstance()
     
-    // Track photos
     private val currentPhotos = mutableListOf<PhotoItem>()
     
     private sealed class PhotoItem {
@@ -60,7 +57,7 @@ class EditListingFragment : Fragment() {
                 currentPhotos.add(PhotoItem.Local(it))
                 renderPhotos()
             } else {
-                Toast.makeText(requireContext(), "Maximum 10 photos allowed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.max_photos_error), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -110,7 +107,7 @@ class EditListingFragment : Fragment() {
             if (currentPhotos.size < 10) {
                 getImage.launch("image/*")
             } else {
-                Toast.makeText(requireContext(), "Maximum 10 photos reached", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.max_photos_reached), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -143,7 +140,7 @@ class EditListingFragment : Fragment() {
     }
 
     private fun updatePhotoCount() {
-        binding.tvPhotoCount.text = getString(R.string.photo_count_initial).replace("0 / 10", "${currentPhotos.size} / 10")
+        binding.tvPhotoCount.text = getString(R.string.photo_count_format, currentPhotos.size)
     }
 
     private fun setupDropdowns() {
@@ -161,13 +158,13 @@ class EditListingFragment : Fragment() {
     private fun setupPriceControls() {
         binding.ivPriceUp.setOnClickListener {
             val currentPrice = binding.etPrice.text.toString().toIntOrNull() ?: 0
-            binding.etPrice.setText((currentPrice + 1).toString())
+            binding.etPrice.setText(getString(R.string.number_format, currentPrice + 1))
         }
 
         binding.ivPriceDown.setOnClickListener {
             val currentPrice = binding.etPrice.text.toString().toIntOrNull() ?: 0
             if (currentPrice > 0) {
-                binding.etPrice.setText((currentPrice - 1).toString())
+                binding.etPrice.setText(getString(R.string.number_format, currentPrice - 1))
             }
         }
     }
@@ -243,7 +240,7 @@ class EditListingFragment : Fragment() {
         val targetCurrency = currencyManager.getSelectedCurrency()
         val convertedPrice = currencyManager.convert(listing.startingPrice, listing.currency, targetCurrency)
         binding.etPrice.setText(convertedPrice.toInt().toString())
-        binding.tvPriceLabel.text = "Starting Price ($targetCurrency) *"
+        binding.tvPriceLabel.text = getString(R.string.starting_price_label_format, targetCurrency)
 
         listing.closingAt?.let { timestamp ->
             selectedDateTime.time = timestamp.toDate()
@@ -287,12 +284,12 @@ class EditListingFragment : Fragment() {
         val location = binding.etLocation.text.toString().trim()
 
         if (title.isEmpty() || description.isEmpty() || location.isEmpty()) {
-            Toast.makeText(requireContext(), "Please fill all required fields", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.fill_required_fields), Toast.LENGTH_SHORT).show()
             return
         }
         
         if (currentPhotos.isEmpty()) {
-            Toast.makeText(requireContext(), "Please add at least one photo", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.photo_required), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -301,18 +298,16 @@ class EditListingFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 binding.btnSave.isEnabled = false
-                binding.btnSave.text = "Saving..."
+                binding.btnSave.text = getString(R.string.saving)
 
                 val newUris = currentPhotos.filterIsInstance<PhotoItem.Local>().map { it.uri }
 
-                // 2. Upload new photos if any
                 val uploadedUrls = if (newUris.isNotEmpty()) {
                     repository.uploadImages(newUris, listing.id)
                 } else {
                     emptyList()
                 }
 
-                // 3. Combine URLs (maintaining order)
                 val finalPhotoUrls = mutableListOf<String>()
                 currentPhotos.forEach { photo ->
                     when (photo) {
@@ -326,7 +321,7 @@ class EditListingFragment : Fragment() {
                     }
                 }
 
-                val updates = mutableMapOf<String, Any>(
+                val updates = mutableMapOf(
                     "title" to title,
                     "description" to description,
                     "location" to location,
@@ -350,12 +345,12 @@ class EditListingFragment : Fragment() {
                 }
 
                 repository.updateListing(listing.id, updates)
-                Toast.makeText(requireContext(), "Changes saved successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.changes_saved_success), Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
             } catch (e: Exception) {
                 binding.btnSave.isEnabled = true
                 binding.btnSave.text = getString(R.string.save_changes)
-                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.error_format, e.message), Toast.LENGTH_SHORT).show()
             }
         }
     }

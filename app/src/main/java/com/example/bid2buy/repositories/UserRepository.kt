@@ -11,9 +11,6 @@ class UserRepository(
     private val firestoreRepository: FirestoreUserRepository,
     private val userDao: UserDao
 ) {
-    // Room is used as SQLite local cache
-    // Firebase is the remote data source
-    // Repository syncs Firebase data into Room
     fun observeUserProfile(uid: String): Flow<UserProfile?> {
         return userDao.getUserById(uid).map { it?.toDomain() }
     }
@@ -24,9 +21,7 @@ class UserRepository(
             remoteUser?.let {
                 userDao.upsertUser(it.toEntity())
             }
-        } catch (e: Exception) {
-            // Offline support
-        }
+        } catch (_: Exception) { }
     }
 
     suspend fun updateUserProfile(

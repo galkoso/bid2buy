@@ -16,8 +16,6 @@ class EditProfileViewModel(application: Application) : AndroidViewModel(applicat
     private val database = AppDatabase.getDatabase(application)
     private val firestoreUserRepository = FirestoreUserRepository()
     private val repository = UserRepository(firestoreUserRepository, database.userDao())
-    // Using BidsRepository just to get the current UID in a "clean" way, 
-    // or I could add getCurrentUserUid to UserRepository.
     private val bidsRepository = BidsRepository(database.bidDao(), database.listingDao())
     private val uid = bidsRepository.getCurrentUserUid() ?: ""
 
@@ -56,7 +54,6 @@ class EditProfileViewModel(application: Application) : AndroidViewModel(applicat
 
     fun saveProfile(
         displayName: String,
-        email: String,
         location: String,
         imageUri: Uri? = null
     ) {

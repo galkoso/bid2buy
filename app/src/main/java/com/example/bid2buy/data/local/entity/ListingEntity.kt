@@ -17,7 +17,7 @@ data class ListingEntity(
     val createdAtMillis: Long?,
     val createdByUid: String,
     val createdByName: String,
-    val photoUrls: String, // Stored as comma-separated string
+    val photoUrls: String,
     val status: String,
     val currentHighestBid: Double?,
     val highestBidderUid: String?,

@@ -12,7 +12,6 @@ class WelcomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Session check
         if (FirebaseAuth.getInstance().currentUser != null) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()

@@ -1,6 +1,5 @@
 package com.example.bid2buy.ui.details
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -59,7 +58,7 @@ class ListingDetailsFragment : Fragment() {
     private fun setupClickListeners() {
         binding.btnPlaceBid.setOnClickListener {
             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to place a bid.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.no_internet_bid_error, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val listing = viewModel.listing.value ?: return@setOnClickListener
@@ -75,7 +74,7 @@ class ListingDetailsFragment : Fragment() {
 
         binding.btnEdit.setOnClickListener {
             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to edit your listing.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.no_internet_edit_error, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val action = ListingDetailsFragmentDirections.actionListingDetailsFragmentToEditListingFragment(args.listingId)
@@ -84,7 +83,7 @@ class ListingDetailsFragment : Fragment() {
 
         binding.btnDelete.setOnClickListener {
             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to delete your listing.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.no_internet_delete_error, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             viewModel.deleteListing()
@@ -93,11 +92,11 @@ class ListingDetailsFragment : Fragment() {
 
         binding.btnViewBids.setOnClickListener {
             if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-                Toast.makeText(requireContext(), "No internet connection. Please connect to the internet to view bid history.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.no_internet_history_error, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val listingId = viewModel.listing.value?.id ?: return@setOnClickListener
-            val bottomSheet = BidHistoryBottomSheetFragment.newInstance(listingId)
+            val listing = viewModel.listing.value ?: return@setOnClickListener
+            val bottomSheet = BidHistoryBottomSheetFragment.newInstance(listing.id, listing.currency)
             bottomSheet.show(parentFragmentManager, BidHistoryBottomSheetFragment.TAG)
         }
     }
@@ -159,11 +158,11 @@ class ListingDetailsFragment : Fragment() {
 
     private fun updateStatusBadge(isClosed: Boolean) {
         if (isClosed) {
-            binding.tvStatus.text = "Closed"
+            binding.tvStatus.setText(R.string.status_closed)
             binding.tvStatus.setBackgroundResource(R.drawable.bg_status_closed)
             binding.tvStatus.setTextColor(Color.WHITE)
         } else {
-            binding.tvStatus.text = "Active"
+            binding.tvStatus.setText(R.string.status_active)
             binding.tvStatus.setBackgroundResource(R.drawable.bg_status_active)
             binding.tvStatus.setTextColor(Color.WHITE)
         }
@@ -172,9 +171,9 @@ class ListingDetailsFragment : Fragment() {
     private fun updateBidButtonText() {
         val isClosed = viewModel.isClosed.value ?: false
         if (isClosed) {
-            binding.btnPlaceBid.text = "Auction Closed"
+            binding.btnPlaceBid.setText(R.string.auction_closed)
         } else {
-            binding.btnPlaceBid.text = "Place a Bid"
+            binding.btnPlaceBid.setText(R.string.place_a_bid)
         }
     }
 
@@ -185,26 +184,26 @@ class ListingDetailsFragment : Fragment() {
         binding.tvLocation.text = listing.location
         binding.tvDescription.text = listing.description
         
-        binding.tvSellerName.text = "by ${listing.createdByName}"
+        binding.tvSellerName.text = getString(R.string.by_seller, listing.createdByName)
         
         val targetCurrency = currencyManager.getSelectedCurrency()
         val currentBid = listing.currentHighestBid
         if (currentBid != null) {
             val convertedBid = currencyManager.convert(currentBid, listing.currency, targetCurrency)
             binding.tvCurrentBid.text = currencyManager.formatPrice(convertedBid, targetCurrency)
-            binding.tvBidLabel.text = "Current Highest Bid"
-            binding.tvBidderName.text = "by ${listing.highestBidderName ?: "Unknown"}"
+            binding.tvBidLabel.setText(R.string.label_current_highest_bid)
+            binding.tvBidderName.text = getString(R.string.by_seller, listing.highestBidderName ?: getString(R.string.unknown))
             binding.tvBidderName.visibility = View.VISIBLE
         } else {
             val convertedPrice = currencyManager.convert(listing.startingPrice, listing.currency, targetCurrency)
             binding.tvCurrentBid.text = currencyManager.formatPrice(convertedPrice, targetCurrency)
-            binding.tvBidLabel.text = "Starting Price"
+            binding.tvBidLabel.setText(R.string.label_starting_price)
             binding.tvBidderName.visibility = View.GONE
         }
         
         val convertedStartingPrice = currencyManager.convert(listing.startingPrice, listing.currency, targetCurrency)
-        binding.tvStartingPrice.text = "Starting price: ${currencyManager.formatPrice(convertedStartingPrice, targetCurrency)}"
-        binding.btnViewBids.text = "View ${listing.bidCount} bids"
+        binding.tvStartingPrice.text = getString(R.string.starting_price_format, currencyManager.formatPrice(convertedStartingPrice, targetCurrency))
+        binding.btnViewBids.text = getString(R.string.view_bids_count, listing.bidCount)
 
         if (listing.photoUrls.isNotEmpty()) {
             val adapter = ImageGalleryAdapter(listing.photoUrls)

@@ -15,7 +15,8 @@ class BidHistoryAdapter : ListAdapter<BidHistoryAdapter.BidHistoryItem, BidHisto
 
     data class BidHistoryItem(
         val bid: Bid,
-        val isHighest: Boolean
+        val isHighest: Boolean,
+        val formattedAmount: String
     )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -33,10 +34,8 @@ class BidHistoryAdapter : ListAdapter<BidHistoryAdapter.BidHistoryItem, BidHisto
         fun bind(item: BidHistoryItem) {
             val bid = item.bid
             binding.tvBidderName.text = bid.bidderName
-            binding.tvAmount.text = "₪${bid.amount.toInt()}"
+            binding.tvAmount.text = item.formattedAmount
             binding.tvTimestamp.text = bid.timestamp?.toDate()?.let { dateFormat.format(it) } ?: ""
-            
-            // Explicitly set visibility to handle view reuse
             binding.tvHighestLabel.visibility = if (item.isHighest) View.VISIBLE else View.GONE
         }
     }

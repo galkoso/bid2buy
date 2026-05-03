@@ -22,17 +22,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ListingRepository(database.listingDao())
     private val currencyManager = CurrencyManager.getInstance(application)
     
-    private val _listings = MutableLiveData<List<Listing>>()
+    private val _listings = MutableLiveData(emptyList<Listing>())
     val listings: LiveData<List<Listing>> = _listings
 
-    private val _isLoading = MutableLiveData<Boolean>(false)
+    private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private val _isPaginating = MutableLiveData<Boolean>(false)
-    val isPaginating: LiveData<Boolean> = _isPaginating
-
-    private val _timerPulse = MutableLiveData<Long>()
-    val timerPulse: LiveData<Long> = _timerPulse
+    private var isPaginating = false
 
     private var lastFetchedListings: List<Listing> = emptyList()
     private var timerJob: Job? = null
@@ -41,9 +37,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private var lastVisibleDocument: DocumentSnapshot? = null
     private var canLoadMore = true
     
-    // Pagination settings for local display
     private var displayedItemsLimit = 20
-    private val PAGE_SIZE = 20
+    private val pageSize = 20
 
     private var currentCategory: String? = null
     private var currentCondition: String? = null
@@ -59,7 +54,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private fun fetchExchangeRates() {
         viewModelScope.launch {
             currencyManager.fetchRatesIfNeeded()
-            processAndPostListings() // Refresh UI with converted prices if needed
+            processAndPostListings()
         }
     }
 
@@ -67,7 +62,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (observationJob != null) return
 
         observationJob = viewModelScope.launch {
-            // Pass the current time to the DAO's observation method as requested.
             repository.observeActiveListings(TimeUtils.currentTimeMillis()).collectLatest { listings ->
                 lastFetchedListings = listings
                 processAndPostListings()
@@ -82,49 +76,43 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(1000)
-                _timerPulse.postValue(TimeUtils.currentTimeMillis())
                 processAndPostListings()
             }
         }
     }
 
     fun refresh() {
-        displayedItemsLimit = 20 // Reset display limit on refresh
+        displayedItemsLimit = 20
         viewModelScope.launch {
             _isLoading.value = true
             fetchExchangeRates()
-            // Server-side filtering now ensures we get up to 20 UNEXPIRED items.
-            lastVisibleDocument = repository.refreshActiveListings(limit = 20)
+            lastVisibleDocument = repository.refreshActiveListings(limit = pageSize.toLong())
             canLoadMore = lastVisibleDocument != null
             _isLoading.value = false
         }
     }
 
     fun loadMore() {
-        if (_isPaginating.value == true) return
+        if (isPaginating) return
 
-        // 1. Logic for gradual display of ALREADY cached items (works offline)
         val filteredCount = getFilteredList().size
         if (displayedItemsLimit < filteredCount) {
-            displayedItemsLimit += PAGE_SIZE
+            displayedItemsLimit += pageSize
             processAndPostListings()
-            // If we still have more cached items to show, we don't necessarily need to hit the network yet
             if (displayedItemsLimit <= filteredCount) return 
         }
 
-        // 2. Logic for fetching NEW items from network (works online)
         if (!canLoadMore || currentSearchQuery != null || currentCategory != null || currentCondition != null || currentPriceRange != null) return
 
         viewModelScope.launch {
-            _isPaginating.value = true
-            // Fetch 20 more valid items from network
-            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument, limit = 20)
+            isPaginating = true
+            val lastDoc = repository.loadMoreActiveListings(lastVisibleDocument, limit = pageSize.toLong())
             if (lastDoc != null) {
                 lastVisibleDocument = lastDoc
             } else {
                 canLoadMore = false
             }
-            _isPaginating.value = false
+            isPaginating = false
         }
     }
 
@@ -132,13 +120,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         currentCategory = if (category == "All Categories" || category.isNullOrBlank()) null else category
         currentCondition = if (condition == "All Conditions" || condition.isNullOrBlank()) null else condition
         currentPriceRange = if (priceRange == "All Prices" || priceRange.isNullOrBlank()) null else priceRange
-        displayedItemsLimit = 20 // Reset limit when filters change
+        displayedItemsLimit = 20
         processAndPostListings()
     }
 
     fun setSearchQuery(query: String?) {
         currentSearchQuery = if (query.isNullOrBlank()) null else query
-        displayedItemsLimit = 20 // Reset limit when search changes
+        displayedItemsLimit = 20
         processAndPostListings()
     }
 
@@ -153,9 +141,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private fun getFilteredList(): List<Listing> {
         val now = TimeUtils.currentTimeMillis()
         
-        // Manual closingAt time-check re-added to ensure items vanish exactly when timer hits zero.
         var filteredList = lastFetchedListings.filter { 
-            it.closingAt?.toDate()?.time ?: 0 > now 
+            (it.closingAt?.toDate()?.time ?: 0) > now
         }
 
         currentSearchQuery?.let { query ->
@@ -174,9 +161,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         currentPriceRange?.let { range ->
             filteredList = filteredList.filter { listing ->
-                val basePrice = if (listing.bidCount > 0) listing.currentHighestBid ?: listing.startingPrice else listing.startingPrice
+                val basePrice = if (listing.bidCount > 0) (listing.currentHighestBid ?: listing.startingPrice) else listing.startingPrice
                 
-                // For filtering, we stick to the base currency (₪/ILS) logic to keep it consistent
                 when (range) {
                     "Under ₪100" -> basePrice < 100
                     "₪100 - ₪500" -> basePrice in 100.0..500.0
@@ -191,8 +177,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun processAndPostListings() {
         val sortedList = getFilteredList()
-        
-        // Apply the display limit for gradual loading (Online & Offline)
         val limitedList = sortedList.take(displayedItemsLimit)
         
         if (_listings.value != limitedList) {

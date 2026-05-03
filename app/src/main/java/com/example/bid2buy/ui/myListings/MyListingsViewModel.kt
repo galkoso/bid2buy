@@ -22,13 +22,13 @@ class MyListingsViewModel(application: Application) : AndroidViewModel(applicati
     private val _listings = MutableLiveData<List<Listing>>()
     val listings: LiveData<List<Listing>> = _listings
 
-    private val _activeCount = MutableLiveData<Int>(0)
+    private val _activeCount = MutableLiveData(0)
     val activeCount: LiveData<Int> = _activeCount
 
-    private val _closedCount = MutableLiveData<Int>(0)
+    private val _closedCount = MutableLiveData(0)
     val closedCount: LiveData<Int> = _closedCount
 
-    private val _isLoading = MutableLiveData<Boolean>(false)
+    private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
     private val _timerPulse = MutableLiveData<Long>()
@@ -43,13 +43,11 @@ class MyListingsViewModel(application: Application) : AndroidViewModel(applicati
         stopListening()
         _isLoading.value = true
 
-        // 1. Refresh from network (Rule: Local and Remote storage)
         viewModelScope.launch {
             repository.refreshUserListings(uid)
             _isLoading.value = false
         }
 
-        // 2. Observe from Room (Single Source of Truth)
         observationJob = viewModelScope.launch {
             repository.observeUserListings(uid).collectLatest { allListings ->
                 updateCountsAndListings(allListings)
@@ -76,7 +74,7 @@ class MyListingsViewModel(application: Application) : AndroidViewModel(applicati
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             while (true) {
-                delay(60000) // Refresh timer every minute
+                delay(60000)
                 _timerPulse.postValue(TimeUtils.currentTimeMillis())
                 _listings.value?.let { currentList ->
                     updateCountsAndListings(currentList)

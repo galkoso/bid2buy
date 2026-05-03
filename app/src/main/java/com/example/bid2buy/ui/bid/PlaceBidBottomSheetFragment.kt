@@ -74,11 +74,8 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
 
         val selectedCurrency = currencyManager.getSelectedCurrency()
         
-        // The values passed to newInstance are in the listing's original currency.
-        // We calculate minBid in the listing's currency first.
         val minBidInOriginalCurrency = if (bidCount == 0) startingPrice else currentHighestBid + 1.0
         
-        // Convert for display and validation
         val currentPriceInSelectedCurrency = currencyManager.convert(
             if (bidCount == 0) startingPrice else currentHighestBid,
             listingCurrency,
@@ -112,7 +109,6 @@ class PlaceBidBottomSheetFragment : BottomSheetDialogFragment() {
                 return@setOnClickListener
             }
 
-            // Convert back to original currency before saving to Firebase
             val amountInOriginalCurrency = currencyManager.convert(
                 amountInSelectedCurrency,
                 selectedCurrency,
